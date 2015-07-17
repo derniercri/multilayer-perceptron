@@ -115,7 +115,12 @@ backpropagation(Speed, Outputs, Network_value, Errors, Layer, Rank, Gradients) -
 			       compute_gradient(Output, Weights, Previous_gradients)
 		       end,
 	    F = fun(W, {I, Acc}) -> 
-			Nw = W + Speed * Gradient * gb_trees:get({Layer + 1, I}, Weight),
+			Previous_value = if 
+					     Rank =:= 0 -> -1;
+					     true -> gb_trees:get({Layer + 1, I}, Weight)
+					 end,
+
+			Nw = W + Speed * Gradient * Previous_value,
 			{I + 1, [Nw | Acc]}
 		end,
 	    {_, New_Weight} = lists:foldl(F, {0, []}, Weight),

@@ -51,19 +51,23 @@ make_layer(Layer_Rank, Outputs, Neuron_values) ->
 %% Rank est l'indice du neurone dans la couche
 %% Values est un tuple contenant les valeur du neurone (voir README)
 init_neuron(Outputs, Layer, Rank, Values) ->
-    Env = {Outputs, gb_trees:empty(), Layer, Rank, Values},
+    {N, W, B, F} = Values,
+    New_values = {N, [B | W], F},
+    Inputs = gb_trees:insert(-1, 1, gb_trees:empty()),
+    Env = {Outputs, Inputs, Layer, Rank, New_values},
     spawn(fun() -> run_neuron(Env, 0) end).
 
 
 %% met le neuronne en attente de stimulation, quand suffisament d'entrée ont stimulé le neuronne, envois a toutes les sortie le résultat du calcul.
 
-run_neuron({Outputs, Inputs, Layer, Rank, {Nb_inputs, Weights, B, F}}, Nb_inputs) ->
+run_neuron({Outputs, Inputs, Layer, Rank, {Nb_inputs, Weights, F}}, Nb_inputs) ->
     Inputs_list = gb_trees_to_sorted_list(Inputs),
-    Result = compute({Weights, B, F}, Inputs_list),
+    Result = compute({Weights, F}, Inputs_list),
     Msg = {done, Result, {self(), Layer, Rank}},
     io:format("result : ~p~n",[Result]), 
     ok = send_msg_to_list(Outputs, Msg),
-    run_neuron({Outputs, gb_trees:empty(), Layer, Rank, {Nb_inputs, Weights, B, F}}, 0);
+    New_inputs = gb_trees:insert(-1, -1, gb_trees:empty()),
+    run_neuron({Outputs, New_inputs, Layer, Rank, {Nb_inputs, Weights, F}}, 0);
 
 run_neuron(Env, Nb_inputs) ->
     {Outputs, Inputs, Layer, Rank, Values} = Env,    
@@ -84,12 +88,12 @@ run_neuron(Env, Nb_inputs) ->
     end.
 
 get_weights(Values) ->
-    {_, Weights,_, _} = Values,
+    {_, Weights, _} = Values,
     Weights.
 
 update_weights(Values, New_weights) ->
-    {Nb_inputs, _, B, F} = Values,
-    {Nb_inputs, New_weights, B, F}.
+    {Nb_inputs, _, F} = Values,
+    {Nb_inputs, New_weights, F}.
 
 %% convertie un gb_tree en liste triée
 gb_trees_to_sorted_list(Gb_Trees) ->
@@ -101,13 +105,13 @@ gb_trees_to_sorted_list(Gb_Trees) ->
 
 
 %% calcule le résultat d'un neurone à partir d'un jeu d'entrée.
-compute({W,B,F}, Input) ->
+compute({W,F}, Input) ->
     Fun = fun ({Val, Weight}, Acc) ->
 		  Val * Weight + Acc
 	  end,
     L = lists:zip(Input, W),
     Val = lists:foldl(Fun, 0, L),
-    F(Val - B).
+    F(Val).
 
 
 %% envoi un message à une liste des PID

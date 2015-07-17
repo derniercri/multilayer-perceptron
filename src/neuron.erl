@@ -2,9 +2,6 @@
 -compile(export_all).
 
 
-    
-
-
 %% Fonction fournissant à un processus une sortie générique affichant le résultat envoyé par un neuronne
 output() ->
     receive
@@ -61,7 +58,7 @@ init_neuron(Outputs, Layer, Rank, Values) ->
 %% met le neuronne en attente de stimulation, quand suffisament d'entrée ont stimulé le neuronne, envois a toutes les sortie le résultat du calcul.
 
 run_neuron({Outputs, Inputs, Layer, Rank, {Nb_inputs, Weights, F}}, Nb_inputs) ->
-    Inputs_list = gb_trees_to_sorted_list(Inputs),
+    Inputs_list = utils:gb_trees_to_sorted_list(Inputs),
     Result = compute({Weights, F}, Inputs_list),
     Msg = {done, Result, {self(), Layer, Rank}},
     io:format("result : ~p~n",[Result]), 
@@ -87,21 +84,18 @@ run_neuron(Env, Nb_inputs) ->
 		
     end.
 
+%%extrait le poids du tuple contenant les valeurs du neurone
 get_weights(Values) ->
     {_, Weights, _} = Values,
     Weights.
 
+%% Met à jour le poids du tuple contenant les valeurs du neurone
 update_weights(Values, New_weights) ->
     {Nb_inputs, _, F} = Values,
     {Nb_inputs, New_weights, F}.
 
-%% convertie un gb_tree en liste triée
-gb_trees_to_sorted_list(Gb_Trees) ->
-    List = gb_trees:to_list(Gb_Trees),
-    F = fun({R1, _}, {R2, _}) ->  R1 =< R2 end,
-    Sorted_list = lists:sort(F, List),
-    F2 = fun({_, V}) -> V end,
-    lists:map(F2, Sorted_list).
+
+
 
 
 %% calcule le résultat d'un neurone à partir d'un jeu d'entrée.

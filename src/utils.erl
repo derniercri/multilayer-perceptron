@@ -13,3 +13,5 @@ seuil(S) ->
     fun (X) when X > S -> 1;
 	(_) -> -1
     end.
+
+sigmoid(X) -> 1 / (1 + math:exp(-X)).

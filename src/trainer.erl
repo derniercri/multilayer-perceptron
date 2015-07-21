@@ -22,10 +22,11 @@ train(Trainer_pid, Inputs, Training_constants, [], False_list, True_list) ->
 
 train(Trainer_pid, Inputs, Training_constants, [Training_values | Training_list], False_list, True_list ) ->
     {Training_inputs, Training_outputs} = Training_values,
+
     New_training_constants = add_training_output(Training_constants, Training_outputs),
     Trainer_pid ! {train, self(), New_training_constants},
     F = fun ({Input, Val}, _) ->
-		Input ! {Val, input},
+		Input ! {input, Val},
 		ok
 	end,
     lists:foldl(F, ok, lists:zip(Inputs, Training_inputs)),
@@ -45,15 +46,18 @@ add_training_output (Training_constant, Training_output) ->
 %%fonction pour le processus d'entrainement.
 %% Chaque neurone + les input doivent envoyer leur résultat au trainer
 %% Network_value : {Nb_neuron, Nb_layer, Weights}
+%%      Nb_neuron : nombre de neurone total dans le résaux
 %%      Nb_layer : liste du nombre de neurone par couche  (attention la couche de sortie ne compte pas dedans)
 %%      Weights : table de hachage contenant les poids. les clés sont un couple (layer, rak)
-%% Quand il a reçut un jeu de test, attend les sortie des différent neurone puis rétropropage les erreur
+%% Quand il a reçu un jeu de test, attend les sortie des différent neurone puis rétropropage les erreur
 %% puis il se remet en attente d'un jeu de test
 
 trainer(Network_value) ->
     receive 
 	{train, From, Training_constants} ->
-	   trainer(From, Training_constants, gb_trees:empty(), Network_value, 0) 
+	    {_, _, _, Training_outputs} = Training_constants,
+	    io:format("training outputs : ~p", [Training_outputs]),
+	    trainer(From, Training_constants, gb_trees:empty(), Network_value, 0) 
     end.
 
 
@@ -69,11 +73,10 @@ trainer(Output, Training_constants, Outputs, Network_value, Outputs_received) ->
 	_ ->
 	    receive
 		{done, Result, {Neuron, Layer, Rank}} ->
-		    New_outputs = gb_trees:insert({Layer, Rank}, {Neuron, Result}),
+		    New_outputs = gb_trees:insert({Layer, Rank}, {Neuron, Result}, Outputs),
 		    trainer(Output, Training_constants, New_outputs, Network_value, Outputs_received + 1)
 	    end
     end.
-
 
 
 %% compare les sortie de chaque neurone au jeu de test et met a jours les poids de chaque neurone.
@@ -90,7 +93,9 @@ trainer(Output, Training_constants, Outputs, Network_value, Outputs_received) ->
 %% Outputs : un gb_trees avec un couple (couche/rang) en clef et un couple (PID, Valeur) comme valeur
 backpropagation(Training_constants, Outputs, Network_value) ->
     {Threshold, _, Speed, Training_outputs} = Training_constants,
-    F = fun({_, {_, Val}}, Acc) -> [Val | Acc] end,
+    %% fonction pour ne retenir que les valeur calculé par la dernière couche
+    F = fun({{0, _}, {_, Val}}, Acc) -> [Val | Acc];
+	   (_, Acc) -> Acc end,
     Real_values = lists:reverse(lists:foldl(F, [], gb_trees:to_list(Outputs))),
     case compute_error(Real_values, Training_outputs, Threshold) of
 	ok -> ok;
@@ -100,11 +105,11 @@ backpropagation(Training_constants, Outputs, Network_value) ->
 
 backpropagation(Speed, Outputs, Network_value, Errors, Layer, Rank, Gradients) ->
     case Network_value of
-	{[], _} -> {updated, Network_value};
-	{[Rank | Other_layer], W} -> 
-	    backpropagation(Speed, Outputs, {Other_layer, W}, Errors, Layer + 1, 0, Gradients);
-	{ L, Weights} -> 
-	    Weight = gb_tree:get({Layer, Rank}, Weights),
+	{_, [], _} -> {updated, Network_value};
+	{N, [Rank | Other_layer], W} -> 
+	    backpropagation(Speed, Outputs, {N, Other_layer, W}, Errors, Layer + 1, 0, Gradients);
+	{ Nb_neuron, L, Weights} -> 
+	    Weight = gb_trees:get({Layer, Rank}, Weights),
 	    {Neuron, Output} = gb_trees:get({Layer, Rank}, Outputs),
 	    Gradient = if 
 			   Layer =:= 0 ->
@@ -112,7 +117,8 @@ backpropagation(Speed, Outputs, Network_value, Errors, Layer, Rank, Gradients) -
 			       compute_gradient_output(Error, Output);
 			   true ->
 			       Previous_gradients = get_previous_gradient(Layer, Gradients),
-			       compute_gradient(Output, Weights, Previous_gradients)
+			       
+			       compute_gradient(Output, Weight, Previous_gradients)
 		       end,
 	    F = fun(W, {I, Acc}) -> 
 			Previous_value = if 
@@ -126,8 +132,10 @@ backpropagation(Speed, Outputs, Network_value, Errors, Layer, Rank, Gradients) -
 	    {_, New_Weight} = lists:foldl(F, {0, []}, Weight),
 	    New_weights_tree = gb_trees:update({Layer, Rank}, New_Weight, Weights),
 	    New_gradient_tree = gb_trees:insert({Layer, Rank}, Gradient, Gradients),
+	    io:format(" update neuron ~p,~p with ~p~n", [Layer, Rank, New_Weight]),
 	    Neuron ! {update, New_Weight},
-	    New_network_value = {L, New_weights_tree},
+	    New_network_value = {Nb_neuron, L, New_weights_tree},
+
 	    backpropagation(Speed, Outputs, New_network_value, Errors, Layer, Rank + 1, New_gradient_tree)
     end.
 
@@ -169,7 +177,7 @@ compute_error(Real_values, Value, Threshold) ->
     F2 = fun (A, Acc) -> A + Acc end,
     Result = lists:reverse(lists:foldl(F, [], lists:zip(Value, Real_values))),
     Average = lists:foldl(F2, 0, Result) / length(Result),
-    io:format("lists of error : ~p", [Result]),
+    io:format("lists of error : ~p~n", [Result]),
     if
 	abs(Average) > Threshold -> 
 	    F3 = fun(A, {I, List}) -> {I + 1, [{I, A} | List]} end,

@@ -42,7 +42,6 @@ add_training_output (Training_constant, Training_output) ->
     {A, B, C, Training_output}.
 
 
-%% AF
 %%fonction pour le processus d'entrainement.
 %% Chaque neurone + les input doivent envoyer leur résultat au trainer
 %% Network_value : {Nb_neuron, Nb_layer, Weights}

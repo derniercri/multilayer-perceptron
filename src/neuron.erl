@@ -6,7 +6,7 @@
 output() ->
     receive
 	{done, Result, {_, Layer, Rank}} -> 
-	    io:format(" couche : ~p, neurone ~p, resultat : ~p~n", [Layer, Rank, Result]),
+	    io:format("couche : ~p, neurone ~p, resultat : ~p~n", [Layer, Rank, Result]),
 	    output();
 	_ ->  
 	    output()
@@ -50,6 +50,7 @@ make_layer(Layer_Rank, Outputs, Neuron_values) ->
 init_neuron(Outputs, Layer, Rank, Values) ->
     {N, W, B, F} = Values,
     New_values = {N, [B | W], F},
+    %% insertion de l'entrée du biais
     Inputs = gb_trees:insert(-1, 1, gb_trees:empty()),
     Env = {Outputs, Inputs, Layer, Rank, New_values},
     spawn(fun() -> run_neuron(Env, 0) end).
@@ -61,7 +62,7 @@ run_neuron({Outputs, Inputs, Layer, Rank, {Nb_inputs, Weights, F}}, Nb_inputs) -
     Inputs_list = utils:gb_trees_to_sorted_list(Inputs),
     Result = compute({Weights, F}, Inputs_list),
     Msg = {done, Result, {self(), Layer, Rank}},
-    io:format("result : ~p~n",[Result]), 
+    io:format("result of neuron ~p,~p = ~p~n",[Layer, Rank, Result]), 
     ok = send_msg_to_list(Outputs, Msg),
     New_inputs = gb_trees:insert(-1, -1, gb_trees:empty()),
     run_neuron({Outputs, New_inputs, Layer, Rank, {Nb_inputs, Weights, F}}, 0);

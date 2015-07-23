@@ -54,7 +54,7 @@ launch_test() ->
     Threshold = 0,
     Primus_F = F,
     Speed = 2,
-    Max_iter = 100000,
+    Max_iter = 10,
     
     Training_list = [ {[1,0], [1]}, {[0,1], [1]}, {[0,0], [0]}, {[1,1], [0]}],
     

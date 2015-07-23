@@ -4,7 +4,7 @@ SRC = src
 COMPILE = erlc -I $(INCLUDE) -pa $(EBIN) -o $(EBIN)
 .PHONY: all clean
 OBJ= neuron.beam trainer.beam utils.beam cube.beam matrix.beam
-TEST=neuron_test cube_test matrix_test
+TEST=neuron_test cube_test matrix_test trainer_test
 DIALYZER=FALSE
 
 # Compile all modules

@@ -58,7 +58,7 @@ trainer(Network_value) ->
     receive 
 	{train, From, Training_constants} ->
 	    {_, _, _, Training_outputs} = Training_constants,
-	    io:format("training outputs : ~p", [Training_outputs]),
+	    %% io:format("training outputs : ~p", [Training_outputs]),
 	    trainer(From, Training_constants, gb_trees:empty(), Network_value, 0) 
     end.
 
@@ -75,7 +75,7 @@ trainer(Output, Training_constants, Outputs, Network_value, Outputs_received) ->
 	_ ->
 	    receive
 		{done, Result, {Neuron, Layer, Rank}} ->
-		    io:format("trainer receive output from ~p,~p~n", [Layer, Rank]),
+		    %% io:format("trainer receive output from ~p,~p~n", [Layer, Rank]),
 		    New_outputs = gb_trees:insert({Layer, Rank}, {Neuron, Result}, Outputs),
 		    trainer(Output, Training_constants, New_outputs, Network_value, Outputs_received + 1)
 	    end
@@ -143,7 +143,7 @@ backpropagation(Speed, Outputs, Network_value, Errors, Layer, Rank, Gradients) -
 	    New_weights_tree = gb_trees:update({Layer, Rank}, New_Weight, Weights),
 	    %% New_weights_cube = cube:update_line_from_list(Layer, Rank, New_Weight, Weights),
 	    New_gradient_tree = gb_trees:insert({Layer, Rank}, Gradient, Gradients),
-	    io:format(" update neuron ~p,~p with ~p~n", [Layer, Rank, New_Weight]),
+	    %% io:format(" update neuron ~p,~p with ~p~n", [Layer, Rank, New_Weight]),
 	    Neuron ! {update, New_Weight},
 	    New_network_value = {Nb_neuron, L, New_weights_tree},
 
@@ -184,7 +184,7 @@ compute_gradient(Output, Weights, Gradients, Layer, Rank) ->
 	end,
     Weights_list = lists:reverse( lists:foldl(F, [], gb_trees:to_list(Weights))),
     F2 = fun ({W, G}, Acc) -> (W * G) + Acc end,
-    io:format("~p, ~p~n", [Weights_list, Gradients]),
+    %% io:format("~p, ~p~n", [Weights_list, Gradients]),
     Sum = lists:foldl(F2, 0, lists:zip(Weights_list, Gradients)),
     Output * (1 - Output) * Sum.
 
@@ -195,13 +195,13 @@ compute_error(Real_values, Value, Threshold) ->
     F2 = fun (A, Acc) -> A + Acc end,
     Result = lists:reverse(lists:foldl(F, [], lists:zip(Value, Real_values))),
     Average = lists:foldl(F2, 0, Result) / length(Result),
-    io:format("Average of error : ~p~n, ", [abs(Average)]),
+    %% io:format("Average of error : ~p~n, ", [abs(Average)]),
     if
 	abs(Average) > Threshold -> 
 	    F3 = fun(A, {I, List}) -> {I + 1, [{I, A} | List]} end,
 	    {_, List} = lists:foldl(F3, {0, []}, Result),
 	    Tree = gb_trees:from_orddict( lists:reverse(List) ),
-	    io:format("ready for update~n, "),
+	    %% io:format("ready for update~n, "),
 	    {update, Tree};
 	true -> ok
     end.

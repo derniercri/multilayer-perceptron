@@ -70,7 +70,7 @@ run_neuron({Outputs, Inputs, Layer, Rank, {Nb_inputs, Weights, F}}, Nb_inputs) -
     Inputs_list = utils:gb_trees_to_sorted_list(Inputs),
     Result = compute({Weights, F}, Inputs_list),
     Msg = {done, Result, {self(), Layer, Rank}},
-    io:format("result of neuron ~p,~p = ~p~n",[Layer, Rank, Result]), 
+    %% io:format("result of neuron ~p,~p = ~p~n",[Layer, Rank, Result]), 
     ok = send_msg_to_list(Outputs, Msg),
     New_inputs = gb_trees:insert(-1, -1, gb_trees:empty()),
     run_neuron({Outputs, New_inputs, Layer, Rank, {Nb_inputs, Weights, F}}, 0);
@@ -80,11 +80,11 @@ run_neuron(Env, Nb_inputs) ->
     receive
 	%% Recevoir une entrée d'un autre neuronne
 	{done, Result, {_, _, Rank_N}} -> 
-	    io:format("input in neuron ~p,~p : ~p~n", [Layer, Rank,Result]),
+	    %% io:format("input in neuron ~p,~p : ~p~n", [Layer, Rank,Result]),
 	    run_neuron({Outputs, gb_trees:insert(Rank_N, Result, Inputs), Layer, Rank, Values}, Nb_inputs + 1);
 	%% Met a jour le neurone, utilisé pendant la phase d'apprentissage
 	{update, New_weights} ->
-	    io:format("update neuron ~p,~p with value : ~p~n", [Layer, Rank, New_weights]),
+	    %% io:format("update neuron ~p,~p with value : ~p~n", [Layer, Rank, New_weights]),
 	    New_values = update_weights(Values, New_weights),
 	    run_neuron({Outputs, Inputs, Layer, Rank, New_values}, Nb_inputs);
 	{get_weight, From} ->

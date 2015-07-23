@@ -42,8 +42,10 @@ launch_test() ->
     N2 = {2, Weight_n2, B2, F},
     N3 = {2, Weight_n3, B3, F},
     
-    C1 = neuron:make_layer(0, [self(), Trainer], [N1]),
-    C2 = neuron:make_layer(1, [self(), Trainer | C1], [N2, N3]),
+    Output = spawn(fun() -> neuron:output() end),
+
+    C1 = neuron:make_layer(0, [Output, Trainer], [N1]),
+    C2 = neuron:make_layer(1, [Trainer | C1], [N2, N3]),
 
     Input1 = spawn(fun () -> neuron:input(2, 0, [Trainer | C2]) end),
     Input2 = spawn(fun () -> neuron:input(2, 1, [Trainer | C2]) end),
@@ -51,8 +53,8 @@ launch_test() ->
     %%trainer constant
     Threshold = 0,
     Primus_F = F,
-    Speed = 0.7,
-    Max_iter = 10,
+    Speed = 2,
+    Max_iter = 100000,
     
     Training_list = [ {[1,0], [1]}, {[0,1], [1]}, {[0,0], [0]}, {[1,1], [0]}],
     

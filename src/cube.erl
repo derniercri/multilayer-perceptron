@@ -65,7 +65,10 @@ get(I, J, K, Cube) ->
 	true ->
 	    array:get(K, array:get(J, array:get(I, Cube)))
     end.
-    
+
+%%
+get_as_list(I, J, Cube) ->    
+    array:to_list( array:get(J, array:get(I, Cube))).
 
 %% F (I, J, K, Val, Acc) -> New Acc
 foldl(F, Acc_init, Cube) ->
@@ -85,3 +88,23 @@ map(F, Cube) ->
 		   array:map(F_la, Val)
 	   end,
     array:map(F_lo, Cube).
+
+from_list(List, Lo, La, Ha) ->
+    from_list(List, cube:new(Lo,La,Ha), Lo, La, Ha, 0, 0, 0).
+
+from_list([], Cube, _, _, _, _, _, _) -> Cube;
+
+from_list(List, Cube, Lo, La, Ha, I, J, K) when K >= Ha ->
+    if
+	J >= La -> 
+	    if I >= Lo -> error(index_out_of_bound);
+	       true -> from_list(List, Cube, Lo, La, Ha, I + 1, 0, 0)
+	    end;
+	true -> from_list(List, Cube, Lo, La, Ha, I, J+1, 0)
+    end;
+
+from_list([Val| Tail], Cube, Lo, La, Ha, I, J, K) -> 
+    New_cube = cube:set(I, J, K, Val, Cube),
+    from_list(Tail, New_cube, Lo, La, Ha, I, J, K+1).
+
+    

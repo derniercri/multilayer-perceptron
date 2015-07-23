@@ -34,7 +34,17 @@ map_test() ->
     ?assertEqual(cube:get(0, 1, 0, Cube2), 1),
     ?assertEqual(cube:get(0, 1, 1, Cube2), 2),
     ?assertEqual(cube:get(0, 1, 2, Cube2), 3).
-    
+
+from_list_test() ->    
+    L = [1,2,3,4,5,6],
+    Cube = cube:from_list(L, 1, 2, 3),
+    ?assertEqual(cube:get(0, 0, 0, Cube), 1),
+    ?assertEqual(cube:get(0, 0, 1, Cube), 2),
+    ?assertEqual(cube:get(0, 0, 2, Cube), 3),
+    ?assertEqual(cube:get(0, 1, 0, Cube), 4),
+    ?assertEqual(cube:get(0, 1, 1, Cube), 5),
+    ?assertEqual(cube:get(0, 1, 2, Cube), 6).
+
 
 
 			     

@@ -96,15 +96,20 @@ from_list([], Cube, _, _, _, _, _, _) -> Cube;
 
 from_list(List, Cube, Lo, La, Ha, I, J, K) when K >= Ha ->
     if
-	J >= La -> 
-	    if I >= Lo -> error(index_out_of_bound);
+	J =:= La - 1-> 
+	    if I =:= Lo - 1 -> error(index_out_of_bound);
 	       true -> from_list(List, Cube, Lo, La, Ha, I + 1, 0, 0)
 	    end;
 	true -> from_list(List, Cube, Lo, La, Ha, I, J+1, 0)
     end;
 
 from_list([Val| Tail], Cube, Lo, La, Ha, I, J, K) -> 
+    io:format("~p~n", [{I, J, K}]),
     New_cube = cube:set(I, J, K, Val, Cube),
     from_list(Tail, New_cube, Lo, La, Ha, I, J, K+1).
 
     
+update_line_from_list(I, J, List, Cube) ->
+    La_array = array:get(I, Cube),
+    New_la_array = array:set(J, array:from_list(List, La_array), La_array),
+    array:set(I, New_la_array, Cube).

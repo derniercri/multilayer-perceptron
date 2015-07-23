@@ -27,6 +27,14 @@ input(Rank, Outputs) ->
 	    input(Rank, Outputs)
     end.
 
+input(Layer, Rank, Outputs) ->
+    receive
+	{input, Value} ->
+	    send_msg_to_list(Outputs, {done, Value, {self(), Layer, Rank}}),
+	    input(Layer, Rank, Outputs);
+	_ -> 
+	    input(Layer, Rank, Outputs)
+    end.
 	    
 %%Créer une couche de neurone et renvoi la liste de leur PID
 %% Layer_rank : indice de la couche
@@ -78,7 +86,7 @@ run_neuron(Env, Nb_inputs) ->
 	{update, New_weights} ->
 	    io:format("update neuron ~p,~p with value : ~p~n", [Layer, Rank, New_weights]),
 	    New_values = update_weights(Values, New_weights),
-	    run_neuron({Outputs, Inputs, Rank, New_values}, Nb_inputs);
+	    run_neuron({Outputs, Inputs, Layer, Rank, New_values}, Nb_inputs);
 	{get_weight, From} ->
 	    Weights = get_weights(Values),
 	    From ! {give_weight, Weights}

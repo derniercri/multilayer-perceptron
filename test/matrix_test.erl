@@ -30,13 +30,3 @@ map_test() ->
     Matrix2 = matrix:map(F, Matrix),
     ?assertEqual(matrix:get(0, 0, Matrix2), 0),
     ?assertEqual(matrix:get(0, 1, Matrix2), 1).
-
-    
-
-
-			     
-		
-		    
-		    
-    
-		     

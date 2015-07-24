@@ -57,7 +57,7 @@ add_training_output (Training_constant, Training_output) ->
 trainer(Network_value) ->
     receive 
 	{train, From, Training_constants} ->
-	    {_, _, _, Training_outputs} = Training_constants,
+	    %% {_, _, _, Training_outputs} = Training_constants,
 	    %% io:format("training outputs : ~p", [Training_outputs]),
 	    trainer(From, Training_constants, gb_trees:empty(), Network_value, 0) 
     end.

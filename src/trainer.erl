@@ -20,7 +20,7 @@ train(_, _, {_, _, _, I}, _, _, _, I) ->
     max;
 
 train(Trainer_pid, Inputs, Training_constants, [], False_list, True_list, I) ->
-    Training_list = False_list ++  True_list,
+    Training_list = utils:shuffle(False_list ++  True_list),
     train(Trainer_pid, Inputs, Training_constants, Training_list, [], [], I);
 
 train(Trainer_pid, Inputs, Training_constants, [Training_values | Training_list], False_list, True_list, I ) ->

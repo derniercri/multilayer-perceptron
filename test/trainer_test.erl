@@ -42,7 +42,7 @@ launch_test() ->
     N2 = {2, Weight_n2, B2, F},
     N3 = {2, Weight_n3, B3, F},
     
-    Output = spawn(fun() -> neuron:output() end),
+    Output = spawn(fun() -> neuron:output_progress() end),
 
     C1 = neuron:make_layer(0, [Output, Trainer], [N1]),
     C2 = neuron:make_layer(1, [Trainer | C1], [N2, N3]),
@@ -53,11 +53,14 @@ launch_test() ->
     %%trainer constant
     Threshold = 0,
     Primus_F = F,
-    Speed = 2,
-    Max_iter = 10,
+    Speed = 0.01,
+    Max_iter = 10000000,
     
-    Training_list = [ {[1,0], [1]}, {[0,1], [1]}, {[0,0], [0]}, {[1,1], [0]}],
+    Training_list = [ {[1,-1], [1]}, {[-1,1], [1]}, {[-1,-1], [0]}, {[1,1], [0]}],
     
     io:format("launching test~n", []),
     trainer:train(Trainer, [Input1, Input2], Training_list, {Threshold, Primus_F, Speed, Max_iter}),
+    
+
+    hd(C1) ! {connect_output, spawn(fun () -> neuron:output() end)},
     {Input1, Input2}.

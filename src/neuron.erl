@@ -3,6 +3,23 @@
 
 
 %% Fonction fournissant à un processus une sortie générique affichant le résultat envoyé par un neuronne
+output_progress() ->
+    output(0).
+
+output(N) ->
+    receive
+	{done, _, _} -> 
+	    if
+		(N rem 100000) =:= 0->
+		    io:format("~p steps~n",[N]),
+		    output(N + 1);
+		true ->
+		    output(N + 1)
+	    end;
+	_ ->  
+	    output(N + 1)
+    end.
+
 output() ->
     receive
 	{done, Result, {_, Layer, Rank}} -> 
@@ -89,8 +106,10 @@ run_neuron(Env, Nb_inputs) ->
 	    run_neuron({Outputs, Inputs, Layer, Rank, New_values}, Nb_inputs);
 	{get_weight, From} ->
 	    Weights = get_weights(Values),
-	    From ! {give_weight, Weights}
-		
+	    From ! {give_weight, Weights};
+	{connect_output, PID} ->
+	    New_env = {[PID | Outputs], Inputs, Layer, Rank, Values},
+	    run_neuron(New_env, Nb_inputs)
     end.
 
 %%extrait le poids du tuple contenant les valeurs du neurone

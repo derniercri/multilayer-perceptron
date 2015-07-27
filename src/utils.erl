@@ -15,3 +15,6 @@ seuil(S) ->
     end.
 
 sigmoid(X) -> 1 / (1 + math:exp(-X)).
+
+shuffle(L) ->
+    [X||{_,X} <- lists:sort([ {random:uniform(), N} || N <- L])].

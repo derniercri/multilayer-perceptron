@@ -11,7 +11,7 @@ gb_trees_to_sorted_list(Gb_Trees) ->
 
 seuil(S) ->
     fun (X) when X > S -> 1;
-	(_) -> -1
+        (_) -> -1
     end.
 
 sigmoid(X) -> 1 / (1 + math:exp(-X)).

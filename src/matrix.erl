@@ -15,13 +15,10 @@ new(Lo, La, Options) ->
 %% give the Matrix's size in a tuple {Lo, La}
 size(Matrix) ->
     case array:size(Matrix) of
-	0 -> {0, 0};
-	Lo -> 
-	    La_array = array:get(0, Matrix),
-	    case array:size(La_array) of
-		0 -> {Lo, 0};
-		La -> {Lo, La}
-	    end
+        0 -> {0, 0};
+        Lo -> 
+            La_array = array:get(0, Matrix),
+            {Lo, array:size(La_array)}
     end.
 
 verif_index(I, J, Size) ->
@@ -34,20 +31,20 @@ verif_index(I, J, Size) ->
 set(I, J, Value, Matrix) ->
     Verif_index = verif_index(I, J, matrix:size(Matrix)),
     if 
-	Verif_index ->  error(badarg);
-	true ->
-	    La_array = array:get(I, Matrix),
-	    New_la_array = array:set(J, Value, La_array),
-	    array:set(I, New_la_array, Matrix)
+        Verif_index ->  error(badarg);
+        true ->
+            La_array = array:get(I, Matrix),
+            New_la_array = array:set(J, Value, La_array),
+            array:set(I, New_la_array, Matrix)
     end.
 
 %% get the value of entry {I, J}
 get(I, J, Matrix) ->
     Verif_index = verif_index(I, J, matrix:size(Matrix)),
     if 
-	Verif_index ->  error(badarg);
-	true ->
-	array:get(J, array:get(I, Matrix))
+        Verif_index ->  error(badarg);
+        true ->
+            array:get(J, array:get(I, Matrix))
     end.
 
 %% F (I, J, Val, Acc) -> New Acc

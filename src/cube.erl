@@ -27,13 +27,13 @@ size(Cube) ->
 	Lo -> 
 	    La_array = array:get(0, Cube),
 	    case array:size(La_array) of
-		0 -> {Lo, 0, 0};
-		La ->
-		    Ha_array = array:get(0, La_array),
-		    case array:size(Ha_array) of
-			0 -> {Lo, La, 0};
-			Ha -> {Lo, La, Ha}
-		    end
+          0 -> {Lo, 0, 0};
+          La ->
+              Ha_array = array:get(0, La_array),
+              case array:size(Ha_array) of
+                  0 -> {Lo, La, 0};
+                  Ha -> {Lo, La, Ha}
+              end
 		  end
 	  end.
 

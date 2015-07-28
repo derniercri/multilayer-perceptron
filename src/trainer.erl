@@ -28,11 +28,13 @@ train(Trainer_pid, Inputs, Training_constants, [Training_values | Training_list]
 
     New_training_constants = add_training_output(Training_constants, Training_outputs),
     Trainer_pid ! {train, self(), New_training_constants},
+
     F = fun ({Input, Val}, _) ->
 		Input ! {input, Val},
 		ok
 	end,
     lists:foldl(F, ok, lists:zip(Inputs, Training_inputs)),
+
     receive
 	ok -> 
 	    train(Trainer_pid, Inputs, Training_constants, Training_list, False_list, [Training_values | True_list], I + 1);
@@ -70,7 +72,8 @@ trainer(Output, Training_constants, Outputs, Network_value, Outputs_received) ->
 		{updated, New_network_value} -> 
 		    Output ! updated,
 		    trainer(merge_network_values(Network_value, New_network_value));
-		_ -> Output ! ok
+		_ -> Output ! ok,
+		    trainer(Network_value)
 	    end;
 	_ ->
 	    receive
@@ -130,7 +133,7 @@ backpropagation(Speed, Outputs, Network_value, Errors, Layer, Rank, Gradients) -
 		       end,
 	    F = fun(W, {I, Acc}) -> 
 			Previous_value = if 
-					     I =:= 0 -> -1;
+					     I =:= 0 -> 1;
 					     true -> {_, V} = gb_trees:get({Layer + 1, I-1}, Outputs),
 						     V
 							 
@@ -172,7 +175,7 @@ compute_gradient_output(Error, Output) ->
     Error * Output * (1 - Output).
 
 
-%%calcule le gradient des couche masqué
+%% Calcule le gradient des couche masqué
 %% Output : valeur de sortie du neurone
 %% Weights : liste des poids appliqué aux entrée (trié dans l'ordre croissant)
 %% Gradients : liste des gradients des sorties du neurone (trié dans l'ordre croissant)

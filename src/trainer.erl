@@ -123,21 +123,22 @@ backpropagation(Speed, Outputs, Network_value, Errors, Layer, Rank, Gradients) -
 	    Weight = gb_trees:get({Layer, Rank}, Weights),
 	    %% Weight = cube:get_as_list(Layer, Rank, Weights),
 	    {Neuron, Output} = gb_trees:get({Layer, Rank}, Outputs),
-	    Gradient = if 
-			   Layer =:= 0 ->
-			       Error = gb_trees:get(Rank, Errors),
-			       compute_gradient_output(Error, Output);
-			   true ->
-			       Previous_gradients = get_previous_gradient(Layer, Gradients),
-			       compute_gradient(Output, Weights, Previous_gradients, Layer, Rank)
-		       end,
+	    Gradient = 
+		case Layer of
+		    0 ->
+			Error = gb_trees:get(Rank, Errors),
+			compute_gradient_output(Error, Output);
+		    _ ->
+			Previous_gradients = get_previous_gradient(Layer, Gradients),
+			compute_gradient(Output, Weights, Previous_gradients, Layer, Rank)
+		end,
 	    F = fun(W, {I, Acc}) -> 
-			Previous_value = if 
-					     I =:= 0 -> 1;
-					     true -> {_, V} = gb_trees:get({Layer + 1, I-1}, Outputs),
-						     V
-							 
-					 end,
+			Previous_value = 
+			    case I of 
+				0 -> 1;
+				_ -> {_, V} = gb_trees:get({Layer + 1, I-1}, Outputs),
+				     V
+			    end,
 
 			Nw = W + Speed * Gradient * Previous_value,
 			{I + 1, [Nw | Acc]}
@@ -199,13 +200,13 @@ compute_error(Real_values, Value, Threshold) ->
     Result = lists:reverse(lists:foldl(F, [], lists:zip(Value, Real_values))),
     Average = lists:foldl(F2, 0, Result) / length(Result),
     %% io:format("Average of error : ~p~n, ", [abs(Average)]),
-    if
-	abs(Average) > Threshold -> 
+    case math:pow(Average, 2) of
+	 Quad when Quad > Threshold -> 
 	    F3 = fun(A, {I, List}) -> {I + 1, [{I, A} | List]} end,
 	    {_, List} = lists:foldl(F3, {0, []}, Result),
 	    Tree = gb_trees:from_orddict( lists:reverse(List) ),
 	    %% io:format("ready for update~n, "),
 	    {update, Tree};
-	true -> ok
+	_ -> ok
     end.
 					   

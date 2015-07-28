@@ -1,4 +1,5 @@
 -module(trainer_test).
+-compile(export_all).
 -include_lib("eunit/include/eunit.hrl").
 
 
@@ -54,13 +55,21 @@ launch_test() ->
     Threshold = 0,
     Primus_F = F,
     Speed = 0.01,
-    Max_iter = 10,
-    
-    Training_list = [ {[1,-1], [1]}, {[-1,1], [1]}, {[-1,-1], [0]}, {[1,1], [0]}],
+    Max_iter = 1,
+
+    Training_list = [ {[1,0], [1]}, {[0,1], [1]}, {[0,0], [0]}, {[1,1], [0]}],
     
     io:format("launching test~n", []),
     trainer:train(Trainer, [Input1, Input2], Training_list, {Threshold, Primus_F, Speed, Max_iter}),
     
 
     hd(C1) ! {connect_output, spawn(fun () -> neuron:output() end)},
-    {Input1, Input2}.
+    {Input1, Input2, C1, C2}.
+
+get_weight(N) ->
+    N ! {get_weight, self()},
+    receive 
+	{give_weight, Weights} -> Weights;
+	_ -> error
+    end.
+	    

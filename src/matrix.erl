@@ -31,15 +31,18 @@ size(Matrix) ->
             {Lo, array:size(La_array)}
     end.
 
-verif_index(I, J, Size) ->
-    {Max_i, Max_j} = Size,
-    Non_out_of_bound = (I < Max_i) and (J < Max_j),
-    Non_neg = (I >= 0) and (J >= 0),
-    not (Non_out_of_bound and Non_neg).
+verif_index(I, J, Matrix) ->
+    case array:size(Matrix) of
+	Max_i when (I >= 0) and (I < Max_i) ->
+	    Line_i = array:get(I, Matrix),
+	    Max_j = array:size(Line_i),
+	    not (J >= 0) and (J < Max_j);
+	_ -> true
+    end.
 
 %% set entry {I, J} to Value in the Matrix 
 set(I, J, Value, Matrix) ->
-    Verif_index = verif_index(I, J, matrix:size(Matrix)),
+    Verif_index = verif_index(I, J, Matrix),
     if 
         Verif_index ->  error(badarg);
         true ->
@@ -50,7 +53,7 @@ set(I, J, Value, Matrix) ->
 
 %% get the value of entry {I, J}
 get(I, J, Matrix) ->
-    Verif_index = verif_index(I, J, matrix:size(Matrix)),
+    Verif_index = verif_index(I, J, Matrix),
     if 
         Verif_index ->  error(badarg);
         true ->

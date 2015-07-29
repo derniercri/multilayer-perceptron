@@ -64,7 +64,7 @@ make_layer(Layer_Rank, Outputs, Neuron_values) ->
                 Neuron = init_neuron(Outputs, Layer_Rank, Rank, Neuron_value),
                 {Rank + 1, [Neuron | Acc]}
         end,
-    {_, L} = lists:foldl(F, {0, []}, Neuron_values),
+    {_, L} = lists:foldl(F, {1, []}, Neuron_values),
     lists:reverse(L).
 
 
@@ -78,7 +78,7 @@ init_neuron(Outputs, Layer, Rank, Values) ->
     {N, W, B, F} = Values,
     New_values = {N, [B | W], F},
     %% insertion de l'entrée du biais
-    Inputs = gb_trees:insert(-1, 1, gb_trees:empty()),
+    Inputs = gb_trees:insert(0, 1, gb_trees:empty()),
     Env = {Outputs, Inputs, Layer, Rank, New_values},
     spawn(fun() -> run_neuron(Env, 0) end).
 
@@ -100,7 +100,7 @@ run_neuron(
     Msg = {done, Result, {self(), Layer, Rank}},
     %% io:format("result of neuron ~p,~p = ~p~n",[Layer, Rank, Result]), 
     ok = send_msg_to_list(Outputs, Msg),
-    New_inputs = gb_trees:insert(-1, -1, gb_trees:empty()),
+    New_inputs = gb_trees:insert(0, 1, gb_trees:empty()),
     run_neuron({Outputs, New_inputs, Layer, Rank, {Nb_inputs, Weights, F}}, 0);
 
 run_neuron(Env, Nb_inputs) ->
@@ -124,7 +124,8 @@ run_neuron(Env, Nb_inputs) ->
             run_neuron({Outputs, Inputs, Layer, Rank, New_values}, Nb_inputs);
         {get_weight, From} ->
             Weights = get_weights(Values),
-            From ! {give_weight, Weights};
+            From ! {give_weight, Weights},
+	    run_neuron(Env, Nb_inputs);
 	{connect_output, PID} ->
 	    New_env = {[PID | Outputs], Inputs, Layer, Rank, Values},
 	    run_neuron(New_env, Nb_inputs)

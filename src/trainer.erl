@@ -1,212 +1,181 @@
--module(trainer).
+-module(trainer3).
 -compile(export_all).
 
-%%entraine un resaux (représenté par ses entrée et ses sortie).
-%% Trainer_pid : pid du processus trainer
-%% Inputs : liste des PID des entrée du résaux de neurone
-%% Training_list : liste de couple entrée sortie à présenter au résaux de neurone (les valeurs sont présenté sous forme de liste, trié dans l'ordre des rang des entrées/sorties
-%% Training_constants : {Threshold, Primus_F, Speed}
-%%                  Threshold : marge d'erreur acceptable par l'entraineur
-%%                  Primus_F : dérivée de la fonction d'activation du neuronne
-%%                  Speed : vitesse d'aprentissage
-%%                  Max : nombre d'itération maximal
+trainer(Trainer_pid, Inputs_network, Training_values, Training_constants) ->
+    trainer(Trainer_pid, Inputs_network, Training_values, Training_constants, [], 0).    
 
-train(Trainer_pid, Inputs, Training_list, Training_constants) ->
-    train(Trainer_pid, Inputs, Training_constants, Training_list, [], [], 0).
-
-train(_, _, _, [], [], _, _) ->
-    ok;
-train(_, _, {_, _, _, I}, _, _, _, I) ->
+trainer(_, _, _, {_, _, _, I}, _, I) ->
     max;
+trainer(Trainer_pid, Inputs_network, [], Training_constants, List, I) ->
+    trainer(Trainer_pid, Inputs_network,utils:shuffle(List), Training_constants,[], I);
 
-train(Trainer_pid, Inputs, Training_constants, [], False_list, True_list, I) ->
-    Training_list = utils:shuffle(False_list ++  True_list),
-    train(Trainer_pid, Inputs, Training_constants, Training_list, [], [], I);
-
-train(Trainer_pid, Inputs, Training_constants, [Training_values | Training_list], False_list, True_list, I ) ->
+trainer(Trainer_pid, Inputs_network, [Training_values | Training_list], Training_constants, List, I) ->
     {Training_inputs, Training_outputs} = Training_values,
-
     New_training_constants = add_training_output(Training_constants, Training_outputs),
     Trainer_pid ! {train, self(), New_training_constants},
-
     F = fun ({Input, Val}, _) ->
 		Input ! {input, Val},
 		ok
 	end,
-    lists:foldl(F, ok, lists:zip(Inputs, Training_inputs)),
-
+    lists:foldl(F, ok, lists:zip(Inputs_network, Training_inputs)),
     receive
-	ok -> 
-	    train(Trainer_pid, Inputs, Training_constants, Training_list, False_list, [Training_values | True_list], I + 1);
-	updated ->
-    	    train(Trainer_pid, Inputs, Training_constants, Training_list, [Training_values | False_list], True_list, I + 1)
-    end.
-
-add_training_output (Training_constant, Training_output) ->
-    {A, B, C, _} = Training_constant,
-    {A, B, C, Training_output}.
-
-
-%%fonction pour le processus d'entrainement.
-%% Chaque neurone + les input doivent envoyer leur résultat au trainer
-%% Network_value : {Nb_neuron, Nb_layer, Weights}
-%%      Nb_neuron : nombre de neurone total dans le résaux (en comptant les entrées)
-%%      Nb_layer : liste du nombre de neurone par couche  (attention la couche de sortie ne compte pas dedans)
-%%      Weights : table de hachage contenant les poids. les clés sont un couple (layer, rak)
-%% Quand il a reçu un jeu de test, attend les sortie des différent neurone puis rétropropage les erreur
-%% puis il se remet en attente d'un jeu de test
-
-trainer(Network_value) ->
-    receive 
-	{train, From, Training_constants} ->
-	    %% {_, _, _, Training_outputs} = Training_constants,
-	    %% io:format("training outputs : ~p", [Training_outputs]),
-	    trainer(From, Training_constants, gb_trees:empty(), Network_value, 0) 
-    end.
-
-
-trainer(Output, Training_constants, Outputs, Network_value, Outputs_received) ->
-    case Network_value of
-	{Outputs_received, _, _} ->
-	    case backpropagation(Training_constants, Outputs, Network_value) of
-		{updated, New_network_value} -> 
-		    Output ! updated,
-		    trainer(merge_network_values(Network_value, New_network_value));
-		_ -> Output ! ok,
-		    trainer(Network_value)
-	    end;
 	_ ->
-	    receive
-		{done, Result, {Neuron, Layer, Rank}} ->
-		    %% io:format("trainer receive output from ~p,~p~n", [Layer, Rank]),
-		    New_outputs = gb_trees:insert({Layer, Rank}, {Neuron, Result}, Outputs),
-		    trainer(Output, Training_constants, New_outputs, Network_value, Outputs_received + 1)
+	    trainer(Trainer_pid, Inputs_network, Training_list, Training_constants, [Training_values | List], I + 1)
+    end.
+    
+add_training_output (Training_constants, Training_output) ->
+    {A, B, C, _} = Training_constants,
+    {A, B, C, array:from_list(Training_output)}.
+
+
+%% fonction initialisant les poids avec des valeurs aléatoire et connectant le trainer au neurones
+%% dans Network les neurones sont représenté par des couples {PID, Nb_entrée
+train_init(Network, N_inputs, Network_size, Main) ->
+    F = fun (_, _, {PID, N}) ->
+		Weights = gen_weight(N),
+		PID ! {update, Weights},
+		PID ! {connect_output, self()},
+		{PID, array:from_list(Weights)}
+	end,
+    New_network = matrix:map(F, Network),
+    io:format("init done~n"),
+    Main ! ok,
+    train(New_network, N_inputs, Network_size).
+	
+%% génère une liste de N nombre compris entre -0.5 et 0.5	
+gen_weight(N) ->
+    gen_weight([], N).
+
+gen_weight(Acc, 0) -> Acc;
+gen_weight(Acc, I) -> 
+    New_Acc = [random:uniform() - 0.5 | Acc],
+    gen_weight(New_Acc, I - 1).
+
+
+%% fonctions d'entrainement du resaux de neuronne
+%% se met en attente de donné d'entrainement
+%% Network : tableau de Layer
+%%    Layer : tableau de Neuron
+%%        Neuron : couple {PID, Weights}
+%%            Weights : tableau des poids du neurone (biais compris)
+%% N_inputs : nombre de résultat attendus (même ceux de la couche d'entrée
+%% Network_size : liste des taille de chaque couche en commençant par la couche de sortie, la couche d'entrée doit aussi être compté
+
+train(Network, N_inputs, Network_size) ->
+    receive
+	{train, From, Training_constant} ->
+	    {Threshold, _, Speed, Training_outputs} = Training_constant,
+	    %% recuperation des sortie de chaque neurone
+	    Inputs_matrix = wait_inputs(N_inputs, Network_size),
+
+	    Real_outputs = array:get(0, Inputs_matrix),
+	    case compute_error(Training_outputs, Real_outputs) of
+		Error when Error >= Threshold ->
+		    New_network = backpropagation(Speed, Training_outputs, Inputs_matrix, Network),
+		    From ! updated,
+		    train(New_network, N_inputs, Network_size);
+		_ ->
+		    From ! ok,
+		    train(Network, N_inputs, Network_size)
 	    end
     end.
 
-%%fusione les ancienne valeur du resaux avec les nouvelles
-merge_network_values(Old, New) ->
-    {N, Layer, _} = Old,
-    {_, _, W} = New,
-    {N, Layer, W}.
-
-%% compare les sortie de chaque neurone au jeu de test et met a jours les poids de chaque neurone.
-%% renvoi updated si les poids ont été mis a jour,
-%% ok sinon
-%% Network_value : {Nb_neuron, Nb_layer, Weights}
-%%      Nb_layer : liste du nombre de neurone par couche (attention la couche de sortie ne compte pas dedans)
-%%      Weights : table de hachage contenant les poids. les clés sont un couple (layer, rak)
-%% Training_constants : {Threshold, Primus_F, Speed}
-%%                  Threshold : marge d'erreur acceptable par l'entraineur
-%%                  Primus_F : dérivée de la fonction d'activation du neuronne
-%%                  Speed : vitesse d'aprentissage
-%%                  Training_output : liste des valeur attendut en sortie du resaux
-%% Outputs : un gb_trees avec un couple (couche/rang) en clef et un couple (PID, Valeur) comme valeur, les valeur d'entrées du resaux sont aussi stocké à la couche la plus grand
-backpropagation(Training_constants, Outputs, Network_value) ->
-    {Threshold, _, Speed, Training_outputs} = Training_constants,
-    %% fonction pour ne retenir que les valeur calculé par la dernière couche
-    F = fun({{0, _}, {_, Val}}, Acc) -> [Val | Acc];
-	   (_, Acc) -> Acc end,
-    Real_values = lists:reverse(lists:foldl(F, [], gb_trees:to_list(Outputs))),
-    case compute_error(Real_values, Training_outputs, Threshold) of
-	ok -> ok;
-	{update, Errors} ->
-		backpropagation (Speed, Outputs, Network_value, Errors, 0, 0, gb_trees:empty())
-    end.
-
-backpropagation(Speed, Outputs, Network_value, Errors, Layer, Rank, Gradients) ->
-    case Network_value of
-	{_, [], _} -> {updated, Network_value};
-	{N, [Rank | Other_layer], W} -> 
-	    backpropagation(Speed, Outputs, {N, Other_layer, W}, Errors, Layer + 1, 0, Gradients);
-	{ Nb_neuron, L, Weights} -> 
-	    Weight = gb_trees:get({Layer, Rank}, Weights),
-	    %% Weight = cube:get_as_list(Layer, Rank, Weights),
-	    {Neuron, Output} = gb_trees:get({Layer, Rank}, Outputs),
-	    Gradient = 
-		case Layer of
-		    0 ->
-			Error = gb_trees:get(Rank, Errors),
-			compute_gradient_output(Error, Output);
-		    _ ->
-			Previous_gradients = get_previous_gradient(Layer, Gradients),
-			compute_gradient(Output, Weights, Previous_gradients, Layer, Rank)
-		end,
-	    F = fun(W, {I, Acc}) -> 
-			Previous_value = 
-			    case I of 
-				0 -> 1;
-				_ -> {_, V} = gb_trees:get({Layer + 1, I-1}, Outputs),
-				     V
-			    end,
-
-			Nw = W + Speed * Gradient * Previous_value,
-			{I + 1, [Nw | Acc]}
-		end,
-	    {_, New_Weight} = lists:foldl(F, {0, []}, Weight),
-	    New_weights_tree = gb_trees:update({Layer, Rank}, New_Weight, Weights),
-	    %% New_weights_cube = cube:update_line_from_list(Layer, Rank, New_Weight, Weights),
-	    New_gradient_tree = gb_trees:insert({Layer, Rank}, Gradient, Gradients),
-	    %% io:format(" update neuron ~p,~p with ~p~n", [Layer, Rank, New_Weight]),
-	    Neuron ! {update, New_Weight},
-	    New_network_value = {Nb_neuron, L, New_weights_tree},
-
-	    backpropagation(Speed, Outputs, New_network_value, Errors, Layer, Rank + 1, New_gradient_tree)
-    end.
 
 
-%%Renvoi la liste des gradient des sorties conectées à un neurone de la couche Layer
-%% Layer : la couche du neurone courante
-%% gradients : gb_tree contenant les gradient de chaque neurone avec comme cléf un couple (Layer,Rank)
-get_previous_gradient(Layer, Gradients) ->
-    F = fun ({{L, Rank}, G }, Acc) when L =:= Layer - 1 -> [{Rank, G} | Acc] ;
-	    (_, Acc) -> Acc 
+backpropagation(Speed, Training_outputs, Inputs_matrix, Network) ->		
+    %% definition d'une fontion permetant de créer le tableau des gradients pour chaque neurone
+    Size = array:size(Network),
+    F = fun (I, _, Matrix) when I =:= Size -> Matrix;
+	    (I, Layer, Matrix) ->
+		F2 = fun (0, _, Line) -> Line;
+			 (J, Input, Line) ->
+			     case I of
+				 0 ->
+				     %% io:format("compute_gradient_output args : ~p, ~p~n", [Input, array:get(J - 1, Training_outputs)]),
+				     Val = compute_gradient_output(Input, array:get(J - 1, Training_outputs)),
+				     array:set(J - 1, Val, Line);
+				 _ ->
+				     Previous_gradient = array:get(I - 1, Matrix),
+				     Sum = sum(I, J, Previous_gradient, Network),
+					 Val = compute_gradient_hiden(Input, Sum),
+				     array:set(J - 1, Val, Line)
+			     end
+		     end,
+		Size_line = array:size(Layer) - 1,
+		Acc = array:new(Size_line),
+		New_Layer = array:foldl(F2,Acc , Layer),
+		array:set(I, New_Layer, Matrix)
 	end,
-    F2 = fun({A, _}, {B, _}) -> A =< B end,
-    F3 = fun ({_, G}) -> G end,
-    L1 = lists:foldl(F, [], gb_trees:to_list(Gradients)),
-    L2 = lists:sort(F2, L1), 
-    lists:map(F3, L2).
+
+    %% calcul des gradients. les gradients de chaque neurone posséde les meme coordonée que son neuron dans la matrice Network
+
+    Gradients_matrix = array:foldl(F, array:new(Size), Inputs_matrix),
+
+    %% definition d'une fonction permetant de mettre a jour les poids à partir de la matrice Network (en utilisant la matrice des gradients)
+    F_map = fun(I, J, {PID, Weights}) ->
+		    Gradient = matrix:get(I, J, Gradients_matrix),
+		    F_map2 = fun (K, W) ->
+				     Input = matrix:get(I+1, K, Inputs_matrix),
+
+				     W + Gradient * Input
+			     end,
+		    New_weights = array:map(F_map2, Weights),
+		    PID ! {update, array:to_list(New_weights)},
+		    {PID, New_weights}
+	    end,
+    matrix:map(F_map, Network).
 
 
-%% calcule le gradient pour les neurone de la couche de sortie
-%% Error : l'erreur calculé pour le neurone
-%% Output : sortie du neurone
-compute_gradient_output(Error, Output) ->
-    Error * Output * (1 - Output).
+compute_error(Target_values, Value) ->
+    L1 = array:to_list(Target_values),
+    L2 = tl(array:to_list(Value)),
+
+    F = fun ({A, B}, Acc) -> math:pow((A - B),2) + Acc end,
+    lists:foldl(F, 0, lists:zip(L1, L2)).
 
 
-%% Calcule le gradient des couche masqué
-%% Output : valeur de sortie du neurone
-%% Weights : liste des poids appliqué aux entrée (trié dans l'ordre croissant)
-%% Gradients : liste des gradients des sorties du neurone (trié dans l'ordre croissant)
-compute_gradient(Output, Weights, Gradients, Layer, Rank) ->
-    F = fun ({{I,_}, Val}, Acc) when (I =:= Layer - 1)  ->
-		Array = array:from_list(Val),
-		[array:get(Rank, Array) | Acc];
-	    (_, Acc) -> Acc
-	end,
-    Weights_list = lists:reverse( lists:foldl(F, [], gb_trees:to_list(Weights))),
-    F2 = fun ({W, G}, Acc) -> (W * G) + Acc end,
-    %% io:format("~p, ~p~n", [Weights_list, Gradients]),
-    Sum = lists:foldl(F2, 0, lists:zip(Weights_list, Gradients)),
-    Output * (1 - Output) * Sum.
+		
+%% met le trainer en attente des entrée du resaux
+%% renvoi un tableau contenant les sortie de chaque neurone
+%% N : nombre d'entrée attendut
+%% Network_size : (voir plus haut)
+wait_inputs(N, Network_size) ->
+    %% on augmente de 1 la taille de chaque couche pour le biais
+    F_map = fun(Size) -> Size + 1 end,
+    New_size = lists:map(F_map, Network_size),
+    wait_inputs(N, matrix:new_variable(length(New_size), New_size), 0).
 
-
-%% renvoi un gb_tree contenant la liste des erreur (ordonné par leur rang) si l'erreur moyenne est superieur au seuil sinon renvoi ok
-compute_error(Real_values, Value, Threshold) ->
-    F = fun ({A, B}, Acc) -> [A - B | Acc] end,
-    F2 = fun (A, Acc) -> A + Acc end,
-    Result = lists:reverse(lists:foldl(F, [], lists:zip(Value, Real_values))),
-    Average = lists:foldl(F2, 0, Result) / length(Result),
-    %% io:format("Average of error : ~p~n, ", [abs(Average)]),
-    case math:pow(Average, 2) of
-	 Quad when Quad > Threshold -> 
-	    F3 = fun(A, {I, List}) -> {I + 1, [{I, A} | List]} end,
-	    {_, List} = lists:foldl(F3, {0, []}, Result),
-	    Tree = gb_trees:from_orddict( lists:reverse(List) ),
-	    %% io:format("ready for update~n, "),
-	    {update, Tree};
-	_ -> ok
+wait_inputs(N, Matrix, N) -> 
+    F = fun(_, Array) -> array:set(0, 1, Array) end,
+    array:map(F, Matrix);
+wait_inputs(N, Matrix, I) -> 
+    receive
+	{done, Result, {_, Layer, Rank}} ->
+	    New_matrix = matrix:set(Layer, Rank, Result, Matrix),
+	    %% io:format("receive ~p/~p from ~p,~p~n", [I+1, N, Layer, Rank]),
+	    wait_inputs(N, New_matrix, I + 1)
     end.
-					   
+
+%% calcul du gradient pour la couche de sortie
+compute_gradient_output(Value, Target_value) ->
+    Value * (1 - Value) * (Target_value - Value).
+
+%% calcul du gradient pour les couches caché
+compute_gradient_hiden(Value, Sum) ->
+    Value * (1 - Value) * Sum.
+
+
+sum(Layer, Rank, Previous_gradients, Network) ->
+    L = array:get(Layer - 1, Network),
+    F = fun(_, {_, Weight_array}) -> array:get(Rank, Weight_array) end,
+    Previous_weights = array:map(F, L),
+    dot_product(Previous_gradients, Previous_weights).
+
+%% produit scalaire entre 2 tableaux
+dot_product(A1, A2) ->
+    L1 = array:to_list(A1),
+    L2 = array:to_list(A2),
+    F = fun({A, B}, Acc) -> 
+		%% io:format("~p * ~p + ~p~n", [A, B, Acc]),
+		(A * B) + Acc end,
+    lists:foldl(F, 0, lists:zip(L1, L2)).

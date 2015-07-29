@@ -3,68 +3,86 @@
 -include_lib("eunit/include/eunit.hrl").
 
 
-%%compute_error
-compute_error_test() ->
-    {update, Tree_test} = trainer:compute_error([1,2,3], [0,1,2], 0),
-    Tree = gb_trees:from_orddict([{0, -1}, {1, -1}, {2, -1}]),
-    ?assertEqual(Tree_test, Tree).
+%% %%compute_error
+%% compute_error_test() ->
+%%     {update, Tree_test} = trainer:compute_error([1,2,3], [0,1,2], 0),
+%%     Tree = gb_trees:from_orddict([{0, -1}, {1, -1}, {2, -1}]),
+%%     ?assertEqual(Tree_test, Tree).
 
-compute_error2_test() ->
-    {update, Tree_test} = trainer:compute_error([1], [0], 0),
-    Tree = gb_trees:from_orddict([{0, -1}]),
-    ?assertEqual(Tree_test, Tree).
+%% compute_error2_test() ->
+%%     {update, Tree_test} = trainer:compute_error([1], [0], 0),
+%%     Tree = gb_trees:from_orddict([{0, -1}]),
+%%     ?assertEqual(Tree_test, Tree).
 
-compute_error3_test() ->
-    ?assertEqual( trainer:compute_error([1, 2, 3], [1, 2, 3], 0), ok).
+%% compute_error3_test() ->
+%%     ?assertEqual( trainer:compute_error([1, 2, 3], [1, 2, 3], 0), ok).
 
 %% launch_trainer
 launch_test() ->
-    Weight_n1 = [-0.1, 0.5],
-    Weight_n2 = [-0.2, -0.7],
-    Weight_n3 = [0, 0.4],
 
-    B1 = 0.1,
-    B2 = 0.9,
-    B3 = -0.4,
-
+    %% création des neurones
+    Weight_null = [1, 1],
     F = fun (X) -> utils:sigmoid(X) end,
-    
-    Weights_tree = gb_trees:from_orddict([{{0,0}, [B1 | Weight_n1]}, {{1,0}, [B2 | Weight_n2]}, {{1,1}, [B3 | Weight_n3]} ]),
-
-    %% Weights_list = [B1 | Weight_n1] ++ [0,0,0] ++ [B2 | Weight_n2] ++ [B3 | Weight_n3],
-    %% Weights_cube = cube:from_list(Weights_list, 2, 2, 3),
-    
-    Nb_layer = [1, 2],
-    Nb_neuron = 5,
-    
-    Trainer = spawn(fun() -> trainer:trainer({Nb_neuron, Nb_layer, Weights_tree}) end),
-
-    N1 = {2, Weight_n1, B1, F},
-    N2 = {2, Weight_n2, B2, F},
-    N3 = {2, Weight_n3, B3, F},
+        
+    N1 = {2, Weight_null, 0, F},
+    N2 = {2, Weight_null, 0, F},
+    N3 = {2, Weight_null, 0, F},
     
     Output = spawn(fun() -> neuron:output_progress() end),
 
-    C1 = neuron:make_layer(0, [Output, Trainer], [N1]),
-    C2 = neuron:make_layer(1, [Trainer | C1], [N2, N3]),
+    C1 = neuron:make_layer(0, [Output], [N1]),
+    C2 = neuron:make_layer(1,  C1, [N2, N3]),
 
-    Input1 = spawn(fun () -> neuron:input(2, 0, [Trainer | C2]) end),
-    Input2 = spawn(fun () -> neuron:input(2, 1, [Trainer | C2]) end),
+    %% création du resaux 
+    L1 = array:from_list([{hd(C1), 3}]),
+    L2 = array:from_list([{hd(C2), 3},
+			  {hd(tl(C2)), 3}]),
+    Network = array:from_list([L1, L2]),
+
+    %% init_trainer
+    N_inputs = 5,
+    Network_size = [1, 2, 2],
+    Self = self(),
+    Trainer = spawn(fun() -> trainer:train_init(Network, N_inputs, Network_size, Self) end),
+
+    Input1 = spawn(fun () -> neuron:input(2, 1, [Trainer | C2]) end),
+    Input2 = spawn(fun () -> neuron:input(2, 2, [Trainer | C2]) end),
     
     %%trainer constant
     Threshold = 0,
     Primus_F = F,
     Speed = 0.01,
-    Max_iter = 1,
+    Max_iter = 1000,
 
     Training_list = [ {[1,0], [1]}, {[0,1], [1]}, {[0,0], [0]}, {[1,1], [0]}],
     
-    io:format("launching test~n", []),
-    trainer:train(Trainer, [Input1, Input2], Training_list, {Threshold, Primus_F, Speed, Max_iter}),
-    
+    io:format("init trainer~n"),
+    receive
+	ok ->
+	    io:format("launching test~n", []),
+	    trainer:trainer(Trainer, [Input1, Input2], Training_list, {Threshold, Primus_F, Speed, Max_iter}),
+	    hd(C1) ! {connect_output, spawn(fun () -> neuron:output() end)},
+	    ok = test_neuron([Input1, Input2], [0, 1], 1),
+	    ok = test_neuron([Input1, Input2], [1, 1], 0),
+	    ok = test_neuron([Input1, Input2], [1, 0], 1),
+	    ok = test_neuron([Input1, Input2], [0, 0], 0)
+    end.
 
-    hd(C1) ! {connect_output, spawn(fun () -> neuron:output() end)},
-    {Input1, Input2, C1, C2}.
+lissage(N) when N >= 0.9 -> 1;
+lissage(N) when N =< 0.1 -> 0;
+lissage(N) -> N.
+			   
+test_neuron(Inputs, Values, Output) ->
+    F = fun ({Input, Val}) -> Input ! {input, Val} end,
+    ok = lists:foreach(F, lists:zip(Inputs, Values)),
+    receive
+	{done, Val, _} ->
+	    ?assertEqual(lissage(Val), Output),
+	    ok;
+	_ ->
+	    ?assertEqual(1, 2),
+	    none
+    end.     
 
 get_weight(N) ->
     N ! {get_weight, self()},

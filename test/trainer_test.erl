@@ -52,7 +52,7 @@ launch_test() ->
     Threshold = 0,
     Primus_F = F,
     Speed = 0.01,
-    Max_iter = 1000,
+    Max_iter = 10000,
 
     Training_list = [ {[1,0], [1]}, {[0,1], [1]}, {[0,0], [0]}, {[1,1], [0]}],
     
@@ -61,7 +61,8 @@ launch_test() ->
 	ok ->
 	    io:format("launching test~n", []),
 	    trainer:trainer(Trainer, [Input1, Input2], Training_list, {Threshold, Primus_F, Speed, Max_iter}),
-	    hd(C1) ! {connect_output, spawn(fun () -> neuron:output() end)},
+	    %% hd(C1) ! {connect_output, spawn(fun () -> neuron:output() end)},
+	    hd(C1) ! {connect_output, self()},
 	    ok = test_neuron([Input1, Input2], [0, 1], 1),
 	    ok = test_neuron([Input1, Input2], [1, 1], 0),
 	    ok = test_neuron([Input1, Input2], [1, 0], 1),

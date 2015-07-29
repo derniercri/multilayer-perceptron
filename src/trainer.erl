@@ -1,4 +1,4 @@
--module(trainer3).
+-module(trainer).
 -compile(export_all).
 
 trainer(Trainer_pid, Inputs_network, Training_values, Training_constants) ->
@@ -38,7 +38,7 @@ train_init(Network, N_inputs, Network_size, Main) ->
 		{PID, array:from_list(Weights)}
 	end,
     New_network = matrix:map(F, Network),
-    io:format("init done~n"),
+    %% io:format("init done~n"),
     Main ! ok,
     train(New_network, N_inputs, Network_size).
 	

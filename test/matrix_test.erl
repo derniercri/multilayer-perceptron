@@ -30,3 +30,17 @@ map_test() ->
     Matrix2 = matrix:map(F, Matrix),
     ?assertEqual(matrix:get(0, 0, Matrix2), 0),
     ?assertEqual(matrix:get(0, 1, Matrix2), 1).
+
+new_variable_test() ->
+    Matrix = matrix:new_variable(3, [1,2,3]),
+    L1 = array:get(0, Matrix),
+    L2 = array:get(1, Matrix),
+    L3 = array:get(2, Matrix),
+    ?assertEqual(array:size(L1), 1),
+    ?assertEqual(array:size(L2), 2),
+    ?assertEqual(array:size(L3), 3).
+    
+		     
+    
+
+

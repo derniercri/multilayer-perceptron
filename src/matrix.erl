@@ -12,6 +12,16 @@ new(Lo, La, Options) ->
     F = fun(_, _) -> array:new(La, Options) end,
     array:map(F, Matrix).
 
+%% create a new matrix with variable dimension for each line
+new_variable(Lo, Size_list) ->
+    F = fun(Size, {Array, I}) ->
+		New_array = array:set(I, array:new(Size), Array),
+		{New_array, I + 1}
+	end,
+    {Array, _} = lists:foldl(F, {array:new(Lo), 0}, Size_list),
+    Array.
+
+
 %% give the Matrix's size in a tuple {Lo, La}
 size(Matrix) ->
     case array:size(Matrix) of

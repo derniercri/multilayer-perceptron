@@ -117,7 +117,7 @@ backpropagation(Speed, Training_outputs, Inputs_matrix, Network) ->
 		    F_map2 = fun (K, W) ->
 				     Input = matrix:get(I+1, K, Inputs_matrix),
 
-				     W + Gradient * Input
+				     W + Gradient * Input * Speed
 			     end,
 		    New_weights = array:map(F_map2, Weights),
 		    PID ! {update, array:to_list(New_weights)},

@@ -107,7 +107,7 @@ backpropagation(Speed, Training_outputs, Inputs_matrix, Network) ->
 		array:set(I, New_Layer, Matrix)
 	end,
 
-    %% calcul des gradients. les gradients de chaque neurone posséde les meme coordonée que son neuron dans la matrice Network
+    %% calcul des gradients. les gradients de chaque neurone posséde les meme coordonée que son neurone dans la matrice Network
 
     Gradients_matrix = array:foldl(F, array:new(Size), Inputs_matrix),
 

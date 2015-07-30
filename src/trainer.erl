@@ -28,9 +28,20 @@ add_training_output (Training_constants, Training_output) ->
     {A, B, C, array:from_list(Training_output)}.
 
 
+init(Network, Network_size, Input_list) ->
+    Self = self(),
+    Trainer = spawn(fun() -> train_init(Network, Network_size, Self, Input_list) end),
+    io:format("init trainer~n"),
+    receive
+	ok ->     io:format("init trainer done~n"),Trainer
+    end.
+
+
 %% fonction initialisant les poids avec des valeurs aléatoire et connectant le trainer au neurones
-%% dans Network les neurones sont représenté par des couples {PID, Nb_entrée
-train_init(Network, N_inputs, Network_size, Main) ->
+%% dans Network les neurones sont représenté par des couples {PID, Nb_entrée}
+train_init(Network, Network_size, Main, Input_list) ->
+    N_inputs = lists:sum(Network_size),
+    %% initialisation des poids de chaque resaux
     F = fun (_, _, {PID, N}) ->
 		Weights = gen_weight(N),
 		PID ! {update, Weights},
@@ -38,6 +49,11 @@ train_init(Network, N_inputs, Network_size, Main) ->
 		{PID, array:from_list(Weights)}
 	end,
     New_network = matrix:map(F, Network),
+
+    %% connection du trainer aux entrée du neurone
+    F2 = fun(PID) -> PID ! {connect_output, self()} end,
+    lists:foreach(F2, Input_list),
+
     %% io:format("init done~n"),
     Main ! ok,
     train(New_network, N_inputs, Network_size).

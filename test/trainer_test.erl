@@ -20,33 +20,14 @@
 %% launch_trainer
 launch_test() ->
 
-    %% création des neurones
-    Weight_null = [1, 1],
-    F = fun (X) -> utils:sigmoid(X) end,
-        
-    N1 = {2, Weight_null, 0, F},
-    N2 = {2, Weight_null, 0, F},
-    N3 = {2, Weight_null, 0, F},
-    
-    Output = spawn(fun() -> neuron:output_progress() end),
-
-    C1 = neuron:make_layer(0, [Output], [N1]),
-    C2 = neuron:make_layer(1,  C1, [N2, N3]),
-
     %% création du resaux 
-    L1 = array:from_list([{hd(C1), 3}]),
-    L2 = array:from_list([{hd(C2), 3},
-			  {hd(tl(C2)), 3}]),
-    Network = array:from_list([L1, L2]),
+    F = fun (X) -> utils:sigmoid(X) end,
+    L = [{1, 2, F},
+	 {2, 2, F}],
+    {Network, Input_list, Output_list, Network_size} = neuron:make_network(L, 2, 2),
 
-    %% init_trainer
-    N_inputs = 5,
-    Network_size = [1, 2, 2],
-    Self = self(),
-    Trainer = spawn(fun() -> trainer:train_init(Network, N_inputs, Network_size, Self) end),
-
-    Input1 = spawn(fun () -> neuron:input(2, 1, [Trainer | C2]) end),
-    Input2 = spawn(fun () -> neuron:input(2, 2, [Trainer | C2]) end),
+    %% Initialisation du superviseur
+    Trainer = trainer:init(Network, Network_size, Input_list),
     
     %%trainer constant
     Threshold = 0,
@@ -55,19 +36,12 @@ launch_test() ->
     Max_iter = 10000,
 
     Training_list = [ {[1,0], [1]}, {[0,1], [1]}, {[0,0], [0]}, {[1,1], [0]}],
-    
-    io:format("init trainer~n"),
-    receive
-	ok ->
-	    io:format("launching test~n", []),
-	    trainer:trainer(Trainer, [Input1, Input2], Training_list, {Threshold, Primus_F, Speed, Max_iter}),
-	    %% hd(C1) ! {connect_output, spawn(fun () -> neuron:output() end)},
-	    hd(C1) ! {connect_output, self()},
-	    ok = test_neuron([Input1, Input2], [0, 1], 1),
-	    ok = test_neuron([Input1, Input2], [1, 1], 0),
-	    ok = test_neuron([Input1, Input2], [1, 0], 1),
-	    ok = test_neuron([Input1, Input2], [0, 0], 0)
-    end.
+    trainer:trainer(Trainer, Input_list, Training_list, {Threshold, Primus_F, Speed, Max_iter}),
+    neuron:connect_output(self(), Output_list),
+    ok = test_neuron(Input_list, [0, 1], 1),
+    ok = test_neuron(Input_list, [1, 1], 0),
+    ok = test_neuron(Input_list, [1, 0], 1),
+    ok = test_neuron(Input_list, [0, 0], 0).
 
 lissage(N) when N >= 0.9 -> 1;
 lissage(N) when N =< 0.1 -> 0;

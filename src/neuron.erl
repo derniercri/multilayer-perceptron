@@ -1,7 +1,6 @@
 -module(neuron).
 -compile(export_all).
 
-
 %% Fonction fournissant à un processus une sortie générique affichant le résultat envoyé par un neuronne
 output_progress() ->
     output(0).
@@ -38,7 +37,6 @@ output() ->
 connect_output(Output, Layer) ->
     F = fun(PID) -> PID ! {connect_output, Output} end,
     lists:foreach(F, Layer).
-	
 
 
 %% Fonction fournissant à un processus une entrée générique permettant
@@ -46,7 +44,6 @@ connect_output(Output, Layer) ->
 %% Rank est le rang de l'entrée, elle est transmise aux neuronnes conectés pour qu'ils sachent d'où vient la valeur qu'ils reçoivent
 %% Outputs est la liste des Neurones auxquel le processus doit envoyé un
 %%  message quand il reçoit une valeur. C'est une liste de PID
-
 input(Rank, Outputs) ->
     receive
         {input, Value} ->
@@ -67,14 +64,12 @@ input(Layer, Rank, Outputs) ->
     end.
 
 
-
 %% créer le resaux
 %% renvoi une triplet {Network, Input_list, Output_list, Network_length}
 %% Network : une matrice contenant un couple {PID, nb_inputs} représentant un neuron
 %% Input_list : liste des PID des entrées du resaux
 %% Output_list : liste des PID de la couche de sortie du resaux
 %% Network_size : liste des taille de chaque couches
-
 %% Arguments
 %% Layer_values : liste de triplet {N, P, F} représentant une couche avec :
 %%     N : nombre de neurone sur la couche
@@ -121,9 +116,6 @@ make_inputs(0, _, _, Acc) -> Acc;
 make_inputs(N, Layer_rank, PID_list, Acc) -> 
     Input = spawn( fun() -> neuron:input(Layer_rank, N, PID_list) end),
     make_inputs(N - 1, Layer_rank, PID_list, [Input | Acc]).
-    
-    
-					      
 
 
 %% crée une couche de neurone dont les poids et les biais sont initialisés à 0
@@ -146,14 +138,12 @@ init_layer(_, _, 0, _, Layer) ->
 init_layer(Layer_rank, Outputs, N, Value, Layer) ->
     Neuron = init_neuron(Outputs, Layer_rank, N, Value),
     init_layer(Layer_rank, Outputs, N - 1, Value, [Neuron | Layer]).
-						  
 
 
 %% Créer une couche de neurone en initialisant les poids et les biais de chaque neurones et renvoie la liste de leurs PID's
 %% Layer_rank : indice de la couche
 %% Outputs : liste des sorties à relier à chaque neurone
 %% Neuron_values : valeurs de chaque neurone
-
 make_layer_hard(Layer_Rank, Outputs, Neuron_values) ->
     F = fun (Neuron_value, {Rank, Acc}) ->
                 Neuron = init_neuron(Outputs, Layer_Rank, Rank, Neuron_value),
@@ -180,7 +170,6 @@ init_neuron(Outputs, Layer, Rank, Values) ->
 
 %% Met le neurone en attente de stimulation, quand suffisamment d'entrées ont 
 %% stimulé le neurone, envoie à toutes les sorties le résultat du calcul.
-
 run_neuron(
   {
     Outputs, 

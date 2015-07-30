@@ -76,7 +76,6 @@ gen_weight(Acc, I) ->
 %%            Weights : tableau des poids du neurone (biais compris)
 %% N_inputs : nombre de résultat attendus (même ceux de la couche d'entrée
 %% Network_size : liste des taille de chaque couche en commençant par la couche de sortie, la couche d'entrée doit aussi être compté
-
 train(Network, N_inputs, Network_size) ->
     receive
 	{train, From, Training_constant} ->
@@ -95,7 +94,6 @@ train(Network, N_inputs, Network_size) ->
 		    train(Network, N_inputs, Network_size)
 	    end
     end.
-
 
 
 backpropagation(Speed, Training_outputs, Inputs_matrix, Network) ->		

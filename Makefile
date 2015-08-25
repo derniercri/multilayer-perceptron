@@ -32,6 +32,9 @@ endif
 run: all
 	erl -pa $(EBIN)
 
+doc:
+	erl -noshell -run edoc_run files '["src/matrix.erl"]' '[{dir, "./docs"}]'
+
 
 # Dialyzer initializer
 init-dialyzer:

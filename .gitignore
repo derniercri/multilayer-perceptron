@@ -12,3 +12,7 @@ rel/example_project
 #emacs
 *~
 \#*\#
+
+#divers
+note.md
+docs

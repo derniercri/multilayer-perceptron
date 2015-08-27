@@ -33,7 +33,7 @@ run: all
 	erl -pa $(EBIN)
 
 doc:
-	erl -noshell -run edoc_run files '["src/matrix.erl"]' '[{dir, "./docs"}]'
+	erl  -I $(INCLUDE) -noshell -run edoc_run files '["src/matrix.erl", "src/neuron.erl"]' '[{dir, "./docs"}]'
 
 
 # Dialyzer initializer
@@ -43,3 +43,4 @@ init-dialyzer:
 # Clean binaries
 clean:
 	rm -rf $(EBIN)/*
+	rm -rf ./docs

@@ -1,24 +1,37 @@
 -module(neuron).
 -compile(export_all).
+-include("neuron.hrl").
+-export([make_network/3,
+	 make_layer_hard/3,
+	 output_progress/1,
+	 output/0,
+	 connect_output/2,
+	 input/2]
+       ).
 
-%% Fonction fournissant à un processus une sortie générique affichant le résultat envoyé par un neuronne
-output_progress() ->
-    output(0).
 
-output(N) ->
+-spec output_progress(I :: integer()) -> no_return().
+output_progress(I) ->
+    output(0, I).
+
+-spec output(N :: integer(), I :: integer()) -> no_return().
+output(N, I) ->
     receive
 	{done, _, _} -> 
 	    if
-		(N rem 100000) =:= 0->
+		(N rem I) =:= 0->
 		    io:format("~p steps~n",[N]),
-		    output(N + 1);
+		    output(N + 1, I);
 		true ->
-		    output(N + 1)
+		    output(N + 1, I)
 	    end;
 	_ ->  
-	    output(N + 1)
+	    output(N + 1, I)
     end.
 
+%% @doc affiche la sortie d'un neurone.
+%%      Cette fonction doit être lancée par un processus connu par une liste de neurone. À chaque fois qu'un de ces neurones obtient un résultat, il l'enverra au processus qui affichera le résultat.
+-spec output() -> no_return().
 output() ->
     receive
         {done, Result, {_, Layer, Rank}} -> 
@@ -31,19 +44,21 @@ output() ->
     end.
 
 
-%% Connecte la sortie Output à tout les neurones de la couche Layer
-%% Output : PID de la sortie à connecter à chaque neurones
-%% Layer : liste des PID de tout les neurones à connecté
+%% @doc Connecte une sortie à une liste de neurone <br/>
+%%      Arguments : 
+%%      <ul><li>Output : PID de la sortie à connecter à chaque neurones </li>
+%%      <li>Layer : liste des PIDs de tout les neurones à connecter </li></ul>
+-spec connect_output(Output :: pid(), Layer :: [pid()]) -> ok.
 connect_output(Output, Layer) ->
     F = fun(PID) -> PID ! {connect_output, Output} end,
     lists:foreach(F, Layer).
 
 
-%% Fonction fournissant à un processus une entrée générique permettant
-%% d'envoyer des valeur à un ou plusieurs neuronne.
-%% Rank est le rang de l'entrée, elle est transmise aux neuronnes conectés pour qu'ils sachent d'où vient la valeur qu'ils reçoivent
-%% Outputs est la liste des Neurones auxquel le processus doit envoyé un
-%%  message quand il reçoit une valeur. C'est une liste de PID
+%% @doc fournit à un processus une entrée générique permettant d'envoyer des valeurs à un ou plusieurs neurone. <br/>
+%%      Arguments : 
+%%      <ul><li>Rank est le rang de l'entrée, elle est transmise aux neurones connectés pour qu'ils sachent d'où vient la valeur qu'ils reçoivent </li>
+%%      <li>Outputs est la liste des neurones auxquels le processus doit envoyer un message quand il reçoit une valeur. C'est une liste de PIDs</li></ul>
+-spec input(Rank :: integer(), Outputs :: [pid()]) -> no_return().
 input(Rank, Outputs) ->
     receive
         {input, Value} ->
@@ -52,6 +67,7 @@ input(Rank, Outputs) ->
         _ -> input(Rank, Outputs)
     end.
 
+-spec input(Layer :: integer(), Rank :: integer(), Outputs :: [pid()]) -> no_return().
 input(Layer, Rank, Outputs) ->
     receive
         {input, Value} ->
@@ -64,19 +80,13 @@ input(Layer, Rank, Outputs) ->
     end.
 
 
-%% créer le resaux
-%% renvoi une triplet {Network, Input_list, Output_list, Network_length}
-%% Network : une matrice contenant un couple {PID, nb_inputs} représentant un neuron
-%% Input_list : liste des PID des entrées du resaux
-%% Output_list : liste des PID de la couche de sortie du resaux
-%% Network_size : liste des taille de chaque couches
-%% Arguments
-%% Layer_values : liste de triplet {N, P, F} représentant une couche avec :
-%%     N : nombre de neurone sur la couche
-%%     P : nombre d'entrée de la couche
-%%     F : fonction d'activation de la couche
-%% Nb_inputs : nombre d'entrée du résaux
-%% Nb_layer : nombre de couche
+%% @doc crée le resaux <br/>
+%%      Arguments :
+%%      <ul><li>Layer_values : liste des valeurs de chaque couche</li>
+%%      <li>Nb_inputs : nombre d'entrée du réseaux </li>
+%%      <li>Nb_layer : nombre de couche</li></ul>
+
+-spec make_network(Layer_values :: [layer_value()], Nb_inputs :: integer(), Nb_layer :: integer()) -> network_value().
 make_network(Layer_values, Nb_inputs, Nb_layer) ->
     %% fonction parcourant Layer_values pour initialiser chaque couche
     F = fun({Nb_neuron, Nb_previous, Fun}, {Network, I, Old_layer}) ->
@@ -89,7 +99,7 @@ make_network(Layer_values, Nb_inputs, Nb_layer) ->
 		{array:set(I, Layer_array, Network), I + 1, Layer}
 	end,
     
-    %% Création du resaux
+    %% Création du réseaux
     {Network, _, Last_layer} = lists:foldl(F, {array:new(Nb_layer), 0, []}, Layer_values),
     %% Création des entrées
     Input_list = make_inputs(Nb_inputs, Nb_layer, Last_layer),
@@ -106,7 +116,7 @@ make_network(Layer_values, Nb_inputs, Nb_layer) ->
     {Network, Input_list, Output_list, Network_size}.
 
 
-%% créer N input d'indice Layer connecté à chaque PID contenue dans PID_list
+%% créer N inputs d'indice Layer connectées à chaque PID contenue dans PID_list
 make_inputs(N, Layer_rank, PID_list) ->
     make_inputs(N, Layer_rank, PID_list, []).
 
@@ -120,7 +130,7 @@ make_inputs(N, Layer_rank, PID_list, Acc) ->
 
 %% crée une couche de neurone dont les poids et les biais sont initialisés à 0
 %% Layer_rank : indice de la couche
-%% Outputs : liste des sortie de la couche
+%% Outputs : liste des sorties de la couche
 %% Nb_neuron : nombre de neurone sur la couche
 %% Nb_inputs : nombre de neurone sur la couche précédente
 %% Fun : fonction d'activation de la couche
@@ -140,10 +150,12 @@ init_layer(Layer_rank, Outputs, N, Value, Layer) ->
     init_layer(Layer_rank, Outputs, N - 1, Value, [Neuron | Layer]).
 
 
-%% Créer une couche de neurone en initialisant les poids et les biais de chaque neurones et renvoie la liste de leurs PID's
-%% Layer_rank : indice de la couche
-%% Outputs : liste des sorties à relier à chaque neurone
-%% Neuron_values : valeurs de chaque neurone
+%% @doc Créer une couche de neurone en initialisant les poids et les biais de chaque neurones et renvoie la liste de leurs PIDs <br/>
+%%      Arguments : 
+%%      <ul><li>Layer_rank : indice de la couche </li>
+%%      <li>Outputs : liste des sorties à relier à chaque neurone </li>
+%%      <li>Neuron_values : valeurs de chaque neurone</li></ul>
+-spec make_layer_hard(Layer_rank :: integer(), Outputs :: [pid()], Neuron_values :: [neuron_value()]) -> [pid()].
 make_layer_hard(Layer_Rank, Outputs, Neuron_values) ->
     F = fun (Neuron_value, {Rank, Acc}) ->
                 Neuron = init_neuron(Outputs, Layer_Rank, Rank, Neuron_value),
@@ -154,7 +166,7 @@ make_layer_hard(Layer_Rank, Outputs, Neuron_values) ->
 
 
 %% Crée un neurone et le charge dans un processus.
-%% Outputs est la liste des sorties auxquel le neurone doit envoyer 
+%% Outputs est la liste des sorties auxquels le neurone doit envoyer 
 % le résultat de son calcul une fois effectué;
 %% Layer est l'indice de la couche du neurone créé.
 %% Rank est l'indice du neurone dans la couche

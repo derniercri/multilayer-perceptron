@@ -2,8 +2,28 @@
 -export([init/3, launch/4]).
 
 
+%% --------------------------------------------
+%% Type declaration
+%% --------------------------------------------
+
+%% @type training_value() = {Input :: [integer()], Output :: [integer()]}.
+%%       Les valeur d'entrainement utilisé par le superviseur <br/>
+%%       Valeurs :
+%%       <ul><li>Input : liste des entrées à fournir au réseau (rangées par ordre croissant)</li>
+%%       <li>Output : liste des sortie attendues</li></ul>
+-type training_value() :: {Input :: [integer()], Output :: [integer()]}.
 
 
+%% @type training_constant() = {Threshold :: integer(), Primus_F :: fun ((float()) -> float()), Speed :: float(), Max_iter :: integer()}.
+%%       les paramètre définissant le superviseur <br/>
+%%       Valeurs :
+%%       <ul><li>Threshold : marge d'erreur accepté entre la sortie réèl et la sortie attendus</li>
+%%       <li>Primus_F : dérivé de la fonction d'activation</li>
+%%       <li>Speed : Vitesse d'apprentissage</li>
+%%       <li> Max_iter : nombre maximal d'entrainement (le superviseur s'arrete s'il a atteint cette limite)</li></ul>
+-type training_constant() :: {Threshold :: integer(), Primus_F :: fun ((float()) -> float()), Speed :: float(), Max_iter :: integer()}.
+
+%% ----------------------------------------------------------
 
 
 %% @doc lance le superviseur.<br/>

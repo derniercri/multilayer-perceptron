@@ -8,7 +8,15 @@
 	 get/3,
 	 foldl/3,
 	 map/2]).
-	 
+
+%% --------------------------------------------
+%% Type declaration
+%% --------------------------------------------
+
+-type matrix() :: array:array(array:array()).
+-type matrix(I) :: array:array(array:array(I)).	 
+
+%% --------------------------------------------
 
 %% @doc create a new matrix of Lo*La dimension
 -spec new(Lo::integer(), La::integer()) -> matrix().

@@ -1,11 +1,10 @@
 -module(neuron).
--compile(export_all).
 -export([make_network/3,
 	 make_layer_hard/3,
 	 output_progress/1,
 	 output/0,
 	 connect_output/2,
-	 input/2]
+	 input/3]
        ).
 
 %% --------------------------------------------
@@ -85,10 +84,7 @@ connect_output(Output, Layer) ->
     lists:foreach(F, Layer).
 
 
-%% @doc fournit à un processus une entrée générique permettant d'envoyer des valeurs à un ou plusieurs neurone. <br/>
-%%      Arguments : 
-%%      <ul><li>Rank est le rang de l'entrée, elle est transmise aux neurones connectés pour qu'ils sachent d'où vient la valeur qu'ils reçoivent </li>
-%%      <li>Outputs est la liste des neurones auxquels le processus doit envoyer un message quand il reçoit une valeur. C'est une liste de PIDs</li></ul>
+
 -spec input(Rank :: integer(), Outputs :: [pid()]) -> no_return().
 input(Rank, Outputs) ->
     receive
@@ -98,6 +94,12 @@ input(Rank, Outputs) ->
         _ -> input(Rank, Outputs)
     end.
 
+%% @doc fournit à un processus une entrée générique permettant d'envoyer des valeurs à un ou plusieurs neurone. <br/>
+%%      Arguments : 
+%%      <ul><li>Layer est l'indice de la couche d'entrée </li>
+%%      <li>Rank est le rang de l'entrée, elle est transmise aux neurones connectés pour qu'ils sachent d'où vient la valeur qu'ils reçoivent </li>
+
+%%      <li>Outputs est la liste des neurones auxquels le processus doit envoyer un message quand il reçoit une valeur. C'est une liste de PIDs</li></ul>
 -spec input(Layer :: integer(), Rank :: integer(), Outputs :: [pid()]) -> no_return().
 input(Layer, Rank, Outputs) ->
     receive

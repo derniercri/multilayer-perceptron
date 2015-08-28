@@ -1,15 +1,30 @@
 -module(trainer).
--compile(export_all).
+-export([init/3, launch/4]).
 
-trainer(Trainer_pid, Inputs_network, Training_values, Training_constants) ->
-    trainer(Trainer_pid, Inputs_network, Training_values, Training_constants, [], 0).    
 
-trainer(_, _, _, {_, _, _, I}, _, I) ->
+
+
+
+
+%% @doc lance le superviseur.<br/>
+%%      Argument :
+%%      <ul><li>Trainer_pid : PID du superviseur</li>
+%%      <li>Input_list : liste des PIDs des entrées du réseau</li>
+%%      <li>Training_values : liste des valeurs d'entrainement @see training_value()</li>
+%%      <li>Training_constant : paramètre définissant le superviseur @see training_constant()</li></ul>
+%%      Valeur de retour : 
+%%      <ul><li>ok : l'entrainement est terminé et les résultats du réseaux ont la marge d'erreur demandé</li>
+%%      <li>max : le superviseur à atteint le nombre maximum d'itération (@see training_constant()), avant que les résultats du réseaux est atteint la marge d'erreur demandé.</li></ul>
+-spec launch(Trainer_pid :: pid(), Input_list :: [pid()], Training_values :: [training_value()], Training_constants :: training_constant()) -> ok | max.
+launch(Trainer_pid, Inputs_network, Training_values, Training_constants) ->
+    launch(Trainer_pid, Inputs_network, Training_values, Training_constants, [], 0).    
+
+launch(_, _, _, {_, _, _, I}, _, I) ->
     max;
-trainer(Trainer_pid, Inputs_network, [], Training_constants, List, I) ->
-    trainer(Trainer_pid, Inputs_network,utils:shuffle(List), Training_constants,[], I);
+launch(Trainer_pid, Inputs_network, [], Training_constants, List, I) ->
+    launch(Trainer_pid, Inputs_network,utils:shuffle(List), Training_constants,[], I);
 
-trainer(Trainer_pid, Inputs_network, [Training_values | Training_list], Training_constants, List, I) ->
+launch(Trainer_pid, Inputs_network, [Training_values | Training_list], Training_constants, List, I) ->
     {Training_inputs, Training_outputs} = Training_values,
     New_training_constants = add_training_output(Training_constants, Training_outputs),
     Trainer_pid ! {train, self(), New_training_constants},
@@ -20,7 +35,7 @@ trainer(Trainer_pid, Inputs_network, [Training_values | Training_list], Training
     lists:foldl(F, ok, lists:zip(Inputs_network, Training_inputs)),
     receive
 	_ ->
-	    trainer(Trainer_pid, Inputs_network, Training_list, Training_constants, [Training_values | List], I + 1)
+	    launch(Trainer_pid, Inputs_network, Training_list, Training_constants, [Training_values | List], I + 1)
     end.
     
 add_training_output (Training_constants, Training_output) ->
@@ -28,12 +43,19 @@ add_training_output (Training_constants, Training_output) ->
     {A, B, C, array:from_list(Training_output)}.
 
 
+%% @doc initialise le superviseur et le connecte au réseaux de neurone. <br/>
+%%      Arguments : 
+%%      <ul><li>Network : une matrice contenant un couple {PID, nb_inputs} représentant un neurone</li>
+%%      <li>Network_size : liste des tailles de chaque couches</li>
+%%      <li>Input_list : liste des PIDs des entrées du réseaux</li></ul>
+-spec init(Network :: matrix:matrix(), Network_size :: [integer()], Input_list :: [pid()]) -> pid().
 init(Network, Network_size, Input_list) ->
     Self = self(),
     Trainer = spawn(fun() -> train_init(Network, Network_size, Self, Input_list) end),
-    io:format("init trainer~n"),
+    %% io:format("init trainer~n"),
     receive
-	ok ->     io:format("init trainer done~n"),Trainer
+	ok ->     %% io:format("init trainer done~n"),
+		  Trainer
     end.
 
 

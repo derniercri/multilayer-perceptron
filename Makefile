@@ -33,7 +33,7 @@ run: all
 	erl -pa $(EBIN)
 
 doc:
-	erl  -I $(INCLUDE) -noshell -run edoc_run files '["src/matrix.erl", "src/neuron.erl"]' '[{dir, "./docs"}]'
+	erl  -I $(INCLUDE) -noshell -run edoc_run files '["src/matrix.erl", "src/neuron.erl", "src/trainer.erl"]' '[{dir, "./docs"}]'
 
 
 # Dialyzer initializer

@@ -39,7 +39,7 @@ launch_test() ->
     Training_list = [ {[1,0], [1]}, {[0,1], [1]}, {[0,0], [0]}, {[1,1], [0]}],
 
     %% Lancement de l'apprentissage
-    trainer:trainer(Trainer, Input_list, Training_list, {Threshold, Primus_F, Speed, Max_iter}),
+    trainer:launch(Trainer, Input_list, Training_list, {Threshold, Primus_F, Speed, Max_iter}),
 
     %% Test des résultat
     neuron:connect_output(self(), Output_list),

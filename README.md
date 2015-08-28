@@ -1,4 +1,4 @@
-[![Build Status](https://magnum.travis-ci.com/derniercri/Multilayer_perceptron_library.svg?token=p2JVdRH4ZTM3RrdbkBvo)("Build Status")](https://magnum.travis-ci.com/derniercri/Multilayer_perceptron_library)
+[![Build Status](https://magnum.travis-ci.com/derniercri/Multilayer_perceptron_library.svg?token=p2JVdRH4ZTM3RrdbkBvo "Build Status")](https://magnum.travis-ci.com/derniercri/Multilayer_perceptron_library)
 
 # Multilayer_perceptron_library
 Fournis des fonction pour créer et entraîner un perceptron multi-couche concurrent
@@ -40,7 +40,7 @@ Les neurones sont représentés par un tuple contenant les valeurs nécessaires 
 Initialisation d'un réseau réalisant un xor.  
 La fonction d'activation est la fonction seuil du module utils  
 Le processus courant est utilisé comme sortie pour le réseau.  
-![Example](https://github.com/derniercri/Multilayer_perceptron_library/img/xor.png "Xor example")
+![Example](https://raw.githubusercontent.com/derniercri/Multilayer_perceptron_library/master/img/xor.png?token=ABrU1ZTO0tFfn0veUYBumPczkzRbXsuiks5V6a8hwA%3D%3D "Xor example")
 ```erlang
 %% Création des neurones
 N1 = {2, [2, 2], -1, utils:seuil(0)},

@@ -1,6 +1,5 @@
 -module(neuron).
 -compile(export_all).
--include("neuron.hrl").
 -export([make_network/3,
 	 make_layer_hard/3,
 	 output_progress/1,

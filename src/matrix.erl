@@ -1,5 +1,4 @@
 -module(matrix).
--include("matrix.hrl").
 -export([new/2,
 	 new/3,
 	 new_variable/2,

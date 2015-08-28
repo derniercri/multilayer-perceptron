@@ -40,7 +40,7 @@ Les neurones sont représentés par un tuple contenant les valeurs nécessaires 
 Initialisation d'un réseau réalisant un xor.  
 La fonction d'activation est la fonction seuil du module utils  
 Le processus courant est utilisé comme sortie pour le réseau.  
-![Example](https://github.com/derniercri/Multilayer_perceptron_library/docs/shema/xor.png "Xor example")
+![Example](https://github.com/derniercri/Multilayer_perceptron_library/img/xor.png "Xor example")
 ```erlang
 %% Création des neurones
 N1 = {2, [2, 2], -1, utils:seuil(0)},

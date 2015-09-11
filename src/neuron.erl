@@ -73,6 +73,20 @@ output() ->
         _ -> output()
     end.
 
+%% @doc sortie utilisé pour communiqué avec un serveur
+%%      À chaque fois qu'un neurone relié à cette sortie envois un résultat, il est envoyé au serveur sous la forme {Rank, Val} avec Rank, le rang de la sortie du neurone.
+%%      Attribut : 
+%%      <ul><li>Serv_name : identifiant du serveur à contacter </li>
+%%      </ul>
+-spec output_serv(Serv_name :: atom()) -> no_return().
+output_serv(Serv_name) ->
+    receive
+        {done, Result, {_, _, Rank}} -> 
+	    gen_server:cast(Serv_name, {output, {Rank, Value}}),
+            output_serv(Serv_name);
+        _ -> output_serv(Serv_name)
+    end.
+
 
 %% @doc Connecte une sortie à une liste de neurone <br/>
 %%      Arguments : 

@@ -82,7 +82,7 @@ output() ->
 output_serv(Serv_name) ->
     receive
         {done, Result, {_, _, Rank}} -> 
-	    gen_server:cast(Serv_name, {output, {Rank, Value}}),
+	    gen_server:cast(Serv_name, {output, {Rank, Result}}),
             output_serv(Serv_name);
         _ -> output_serv(Serv_name)
     end.

@@ -3,6 +3,7 @@
 	 make_layer_hard/3,
 	 output_progress/1,
 	 output/0,
+	 output_serv/1,
 	 connect_output/2,
 	 input/3]
        ).
@@ -285,7 +286,7 @@ update_weights(Values, New_weights) ->
 
 %% calcule le résultat d'un neurone à partir d'un jeu d'entrées.
 compute({W,F}, Input) ->
-    io:format("~p  ~p~n", [Input, W]),
+    %% io:format("~p  ~p~n", [Input, W]),
     Fun = fun ({Val, Weight}, Acc) -> Val * Weight + Acc end,
     L = lists:zip(Input, W),
     Val = lists:foldl(Fun, 0, L),

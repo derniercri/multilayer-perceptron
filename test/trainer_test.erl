@@ -36,6 +36,7 @@ launch_test() ->
     Speed = 1,
     Max_iter = 10000,
 
+
     Training_list = [ {[1,0], [1]}, {[0,1], [1]}, {[0,0], [0]}, {[1,1], [0]}],
 
     %% Lancement de l'apprentissage

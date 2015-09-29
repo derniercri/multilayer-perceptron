@@ -34,11 +34,7 @@ init({Layers_values, Nb_inputs, Nb_layer}) ->
 
     %% initialisation de l'état du serveur
     [{Nb_outputs, _, _} | _] = Layers_values,
-    State = init_state(Network_value, Nb_outputs, Trainer),
-
-    %% Initialisation du processus de sortie
-    Output = spawn(fun() -> neuron:output_serv(?MODULE) end),
-    neuron:connect_output(Output, Output_list),
+    State = init_state(Network_value, Nb_outputs, Trainer, Output_list),
     {ok, State}.
 
 
@@ -58,7 +54,7 @@ handle_call({compute, Values_list}, From, State) ->
 handle_call({train, Training_values, Training_constant}, From, State) -> 
     case get_network_state(State) of
 	%% si le réseau est disponible, on lance l'entrainement
-	ready -> 
+	init -> 
 	    {Trainer, Input_list} = get_training_value(State),
 	    Trainer ! {train, Input_list, Training_values, Training_constant},
 	    New_state = set_network_state(is_training, State),
@@ -88,6 +84,12 @@ handle_cast({output, Output}, State) ->
 handle_cast({training_done, Result}, State) -> 
     Client = get_from(State),
     gen_server:reply(Client, {training_done, Result}),
+    %% Initialisation du processus de sortie
+    Output_pid_list = get_output_pid_list(State),
+    Output = spawn(fun() -> neuron:output_serv(?MODULE) end),
+    neuron:connect_output(Output, Output_pid_list),
+
+    %% Réinitialisation de l'état
     New_state = reset_state(State),
     %% io:format("training end~n"),
     {noreply, New_state}.
@@ -105,55 +107,58 @@ code_change(_OldVsn, State, _Extra) -> {ok, State}.
 %% Fonction de manipulation de l'état
 %% -----------------------------------
 
-init_state(Network_value, Nb_outputs, Trainer) ->
-    {Network_value, Trainer, {ready, null}, [], {0, Nb_outputs}}.
+init_state(Network_value, Nb_outputs, Trainer, Output_pid_list) ->
+    {Network_value, Trainer, {init, null}, [], {0, Nb_outputs}, Output_pid_list}.
 
 reset_state(State) ->
-    {Network_value, Trainer, _, _, {_, Nb_outputs}} = State,
-    {Network_value, Trainer, {ready, null}, [], {0, Nb_outputs}}.
+    {Network_value, Trainer, _, _, {_, Nb_outputs}, Output_pid_list} = State,
+    {Network_value, Trainer, {ready, null}, [], {0, Nb_outputs},Output_pid_list}.
 
 add_output(Output, State) ->
-    {Network_value, Trainer, Network_State, Output_list, {Outputs_computed, Nb_outputs}} = State,
+    {Network_value, Trainer, Network_State, Output_list, {Outputs_computed, Nb_outputs}, Output_pid_list} = State,
     New_output_list = [Output | Output_list],
-    {Network_value, Trainer, Network_State, New_output_list, {Outputs_computed + 1, Nb_outputs}}.
+    {Network_value, Trainer, Network_State, New_output_list, {Outputs_computed + 1, Nb_outputs}, Output_pid_list}.
 
 get_input_list(State) ->
-    {Network_value, _, _, _, _} = State,
+    {Network_value, _, _, _, _, _} = State,
     {_, Input_list, _, _} = Network_value,
     Input_list.
 
 is_output_ok(State) ->
-    {_, _, _, _, {Outputs_computed, Nb_outputs}} = State,
+    {_, _, _, _, {Outputs_computed, Nb_outputs}, _} = State,
     (Outputs_computed =:= Nb_outputs).
 
 get_answer_info(State) ->
-    {_, _, {_, From}, Output_list, _} = State,
+    {_, _, {_, From}, Output_list, _, _} = State,
     F = fun({A, _}, {B, _}) -> A =< B end,
     F2 = fun ({_, Val}) -> Val end,
     Ordoned_list = lists:map(F2, lists:sort(F, Output_list)),
     {From, Ordoned_list}.
 
 get_from(State) ->
-    {_, _, {_, From}, _, _} = State,
+    {_, _, {_, From}, _, _, _} = State,
     From.    
 
 get_network_state(State) ->
-    {_, _, {Network_State, _}, _, _} = State,
+    {_, _, {Network_State, _}, _, _, _} = State,
     Network_State.
 
 set_network_state(New_network_state, State) ->
-    {Network_value, Trainer, {_, From}, Output_list, Output_info} = State,
-    {Network_value, Trainer, {New_network_state, From}, Output_list, Output_info}.
+    {Network_value, Trainer, {_, From}, Output_list, Output_info, Output_pid_list} = State,
+    {Network_value, Trainer, {New_network_state, From}, Output_list, Output_info, Output_pid_list}.
 
 get_training_value(State) ->
-    {Network_value, Trainer, _, _, _} = State,
+    {Network_value, Trainer, _, _, _, _} = State,
     {_, Input_list, _, _} = Network_value,
     {Trainer, Input_list}.
     
 add_from(State, From) ->
-    {Network_value, Trainer, {Network_state,_}, Output_list, Output_info} = State,
-    {Network_value, Trainer, {Network_state, From}, Output_list, Output_info}.
+    {Network_value, Trainer, {Network_state,_}, Output_list, Output_info, Output_pid_list} = State,
+    {Network_value, Trainer, {Network_state, From}, Output_list, Output_info, Output_pid_list}.
     
+get_output_pid_list(State) ->
+    {_, _, _, _, _, Output_pid_list} = State,
+    Output_pid_list.
 
 %% -------------------------------------
 %% Fonction d'interface avec le trainer

@@ -50,7 +50,7 @@ handle_call({compute, Values_list}, From, State) ->
 	    F = fun ({Input, Val}) -> Input ! {input, Val} end,
 	    ok = lists:foreach(F, lists:zip(Inputs_list, Values_list)),
 	    New_state = set_network_state(is_computing, State),
-	    io:format("compute launched~n"),
+%%	    io:format("compute launched~n"),
 	    {reply, launched, add_from(New_state, From)};
 	%% sinon on renvoi une réponse négative
 	Other -> {reply, Other, State}
@@ -62,7 +62,7 @@ handle_call({train, Training_values, Training_constant}, From, State) ->
 	    {Trainer, Input_list} = get_training_value(State),
 	    Trainer ! {train, Input_list, Training_values, Training_constant},
 	    New_state = set_network_state(is_training, State),
-	    io:format("training launched~n"),
+	    %% io:format("training launched~n"),
 	    {reply, launched, add_from(New_state, From)};
 	%% sinon on renvoi une réponse négative
 	Other -> {reply, Other, State}
@@ -77,7 +77,7 @@ handle_cast({output, Output}, State) ->
 	    case is_output_ok(New_state) of
 		true ->
 		    {Client, Ordoned_list} = get_answer_info(New_state),
-		    io:format("Output ~p~n", [Ordoned_list]),
+		    %% io:format("Output ~p~n", [Ordoned_list]),
 		    gen_server:reply(Client, {compute_done, Ordoned_list}),
 		    {noreply, reset_state(New_state)};
 
@@ -89,7 +89,7 @@ handle_cast({training_done, Result}, State) ->
     Client = get_from(State),
     gen_server:reply(Client, {training_done, Result}),
     New_state = reset_state(State),
-    io:format("training end~n"),
+    %% io:format("training end~n"),
     {noreply, New_state}.
 
 

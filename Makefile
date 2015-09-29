@@ -3,7 +3,7 @@
 
 .PHONY: test
 
-lib: test
+all: 
 	rebar compile
 
 test:
@@ -12,5 +12,5 @@ test:
 clean:
 	rebar clean
 
-run: lib
-	erl -pa ebin
+run: 
+	erl -pa ebin -pa ./deps/*/ebin

@@ -1,46 +1,16 @@
-INCLUDE = include
-EBIN = ebin
-SRC = src
-COMPILE = erlc -I $(INCLUDE) -pa $(EBIN) -o $(EBIN)
-.PHONY: all clean
-OBJ= neuron.beam trainer.beam utils.beam cube.beam matrix.beam mpl.beam
-TEST=neuron_test cube_test matrix_test trainer_test
-DIALYZER=FALSE
+# This Makefile is only here because I... sometimes, forgot
+# the rebar commands :P
 
-# Compile all modules
-all: init ${OBJ}
+.PHONY: test
 
-init:
-	mkdir -p ./ebin
+lib: test
+	rebar compile
 
-#Run the Test
-test:all ${TEST} 
-	/usr/lib/erl-test-runner/erl-test-runner ${EBIN} ${TEST}
+test:
+	rebar compile eunit
 
-# General rules
-%.beam: src/%.erl
-ifeq ($(DIALYZER), TRUE)
-	dialyzer  $(<)
-endif
-	$(COMPILE) $(<)
-
-#Test Rules
-%_test: test/%_test.erl
-	$(COMPILE) $(<)
-
-# Run with the library
-run: all
-	erl -pa $(EBIN)
-
-doc:
-	erl  -I $(INCLUDE) -noshell -run edoc_run files '["src/matrix.erl", "src/neuron.erl", "src/trainer.erl"]' '[{dir, "./docs"}]'
-
-
-# Dialyzer initializer
-init-dialyzer:
-	dialyzer --build_plt --apps erts kernel stdlib crypto mnesia sasl common_test eunit
-
-# Clean binaries
 clean:
-	rm -rf $(EBIN)/*
-	rm -rf ./docs
+	rebar clean
+
+run: lib
+	erl -pa ebin

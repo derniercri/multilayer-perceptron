@@ -1,0 +1,17 @@
+{application, mpl,
+ [
+  {description, "An Erlang mpl library"},
+  {vsn, "1"},
+  {modules, [
+             mpl,
+	     neuron,
+	     trainer,
+	     utils
+            ]},
+  {registered, []},
+  {applications, [
+                  kernel,
+                  stdlib
+                 ]},
+  {env, []}
+ ]}.

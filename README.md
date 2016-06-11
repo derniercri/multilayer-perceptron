@@ -1,4 +1,4 @@
-[![Build Status](https://magnum.travis-ci.com/derniercri/Multilayer_perceptron_library.svg?token=p2JVdRH4ZTM3RrdbkBvo "Build Status")](https://magnum.travis-ci.com/derniercri/Multilayer_perceptron_library)
+
 
 # Multilayer_perceptron_library
 Fournis des fonction pour créer et entraîner un perceptron multi-couche concurrent
@@ -149,4 +149,3 @@ Maintenant que notre réseau est entraîné, nous pouvons utiliser la fonction c
 ```erlang
 neuron:connect_output(self(), Output_list)
 ```
-

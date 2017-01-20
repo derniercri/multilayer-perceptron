@@ -1,3 +1,9 @@
+%% @author A. d'Azémar
+%% @copyright 2016 <Dernier Cri>
+%% @version 2.0
+%% @doc Define a trainer for a neural network
+
+
 -module(trainer).
 -export([init/3, launch/4]).
 
@@ -7,34 +13,31 @@
 %% --------------------------------------------
 
 %% @type training_value() = {Input :: [integer()], Output :: [integer()]}.
-%%       Les valeur d'entrainement utilisé par le superviseur <br/>
-%%       Valeurs :
-%%       <ul><li>Input : liste des entrées à fournir au réseau (rangées par ordre croissant)</li>
-%%       <li>Output : liste des sortie attendues</li></ul>
+%%       Training values used by the supervisor <br/>
+%%       Values :
+%%       <ul><li>Input : Oredred list of input values</li>
+%%       <li>Output : Expected output values</li></ul>
 -type training_value() :: {Input :: [integer()], Output :: [integer()]}.
 
 
 %% @type training_constant() = {Threshold :: integer(), Primus_F :: fun ((float()) -> float()), Speed :: float(), Max_iter :: integer()}.
-%%       les paramètre définissant le superviseur <br/>
-%%       Valeurs :
-%%       <ul><li>Threshold : marge d'erreur accepté entre la sortie réèl et la sortie attendus</li>
-%%       <li>Primus_F : dérivé de la fonction d'activation</li>
-%%       <li>Speed : Vitesse d'apprentissage</li>
-%%       <li> Max_iter : nombre maximal d'entrainement (le superviseur s'arrete s'il a atteint cette limite)</li></ul>
+%%       Supervisor parameters <br/>
+%%       Values :
+%%       <ul><li>Threshold : Error threshold</li>
+%%       <li>Primus_F : Derivation on the learning function</li>
+%%       <li>Speed : Learning speed</li>
+%%       <li> Max_iter : Max training iteration</li></ul>
 -type training_constant() :: {Threshold :: integer(), Primus_F :: fun ((float()) -> float()), Speed :: float(), Max_iter :: integer()}.
 
 %% ----------------------------------------------------------
 
 
-%% @doc lance le superviseur.<br/>
-%%      Argument :
-%%      <ul><li>Trainer_pid : PID du superviseur</li>
-%%      <li>Input_list : liste des PIDs des entrées du réseau</li>
-%%      <li>Training_values : liste des valeurs d'entrainement @see training_value()</li>
-%%      <li>Training_constant : paramètre définissant le superviseur @see training_constant()</li></ul>
-%%      Valeur de retour : 
-%%      <ul><li>ok : l'entrainement est terminé et les résultats du réseaux ont la marge d'erreur demandé</li>
-%%      <li>max : le superviseur à atteint le nombre maximum d'itération (@see training_constant()), avant que les résultats du réseaux est atteint la marge d'erreur demandé.</li></ul>
+%% @doc launch the supervisor.<br/>
+%%      Parameters:
+%%      <ul><li>Trainer_pid : PID of the supervisor</li>
+%%      <li>Input_list : PID's list of supervisor input</li>
+%%      <li>Training_values : Training 's values list  @see training_value()</li>
+%%      <li>Training_constant : Supervisors configuration @see training_constant()</li></ul>
 -spec launch(Trainer_pid :: pid(), Input_list :: [pid()], Training_values :: [training_value()], Training_constants :: training_constant()) -> ok | max.
 launch(Trainer_pid, Inputs_network, Training_values, Training_constants) ->
     launch(Trainer_pid, Inputs_network, Training_values, Training_constants, [], 0).    
@@ -63,11 +66,11 @@ add_training_output (Training_constants, Training_output) ->
     {A, B, C, array:from_list(Training_output)}.
 
 
-%% @doc initialise le superviseur et le connecte au réseaux de neurone. <br/>
+%% @doc Initialize the supervisor and connect it to the neural network <br/>
 %%      Arguments : 
-%%      <ul><li>Network : une matrice contenant un couple {PID, nb_inputs} représentant un neurone</li>
-%%      <li>Network_size : liste des tailles de chaque couches</li>
-%%      <li>Input_list : liste des PIDs des entrées du réseaux</li></ul>
+%%      <ul><li>Network : a Matrix composed by  {PID, nb_inputs} (a neuron)</li>
+%%      <li>Network_size : List of layer's size</li>
+%%      <li>Input_list : PID's list of the inputs</li></ul>
 -spec init(Network :: matrix:matrix(), Network_size :: [integer()], Input_list :: [pid()]) -> pid().
 init(Network, Network_size, Input_list) ->
     Self = self(),

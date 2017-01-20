@@ -1,4 +1,4 @@
-%% @author A. d'Azémard
+%% @author A. d'Azémar
 %% @copyright 2016 <Dernier Cri>
 %% @version 2.0
 %% @doc Define a cube type (an alias of scoped array)

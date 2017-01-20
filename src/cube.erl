@@ -105,7 +105,9 @@ get(I, J, K, Cube) ->
 get_as_list(I, J, Cube) ->    
     array:to_list( array:get(J, array:get(I, Cube))).
 
-%% F (I, J, K, Val, Acc) -> New Acc
+%% @doc Foldl for a cube
+-spec foldl(Function, Acc_init :: A, Array :: array()) -> B when
+      Function :: fun((Index :: number(), Value :: _, Acc :: A) -> B).
 foldl(F, Acc_init, Cube) ->
     F_curry = fun(I, J) -> fun(K, Val, Acc) -> F(I, J, K, Val, Acc) end end,
     
@@ -115,7 +117,9 @@ foldl(F, Acc_init, Cube) ->
 	   end,
     array:foldl(F_lo, Acc_init, Cube).
 
-%% F (I, J, K, Val) -> New_val
+%% @doc Map for a cube
+-spec map(Function, Array :: array()) -> array() when
+Function :: fun((Index :: number(), Value :: _) -> _).
 map(F, Cube) ->
     F_curry = fun(I, J) -> fun(K, Val) -> F(I, J, K, Val) end end,
     F_lo = fun(I, Val) ->
@@ -124,11 +128,22 @@ map(F, Cube) ->
 	   end,
     array:map(F_lo, Cube).
 
+%% @doc Create a cube from a list
+-spec from_list(List::list(), Lo::number(), La::number(), Ha::number()) -> array().
 from_list(List, Lo, La, Ha) ->
     from_list(List, cube:new(Lo,La,Ha), Lo, La, Ha, 0, 0, 0).
 
+%% @doc Create a cube from a list
+-spec from_list(
+	List::list(), 
+	Cube::array(), 
+	Lo::number(), 
+	La::number(), 
+	Ha::number(), 
+	I::number(), 
+	J::number(), 
+	K::number()) -> array().
 from_list([], Cube, _, _, _, _, _, _) -> Cube;
-
 from_list(List, Cube, Lo, La, Ha, I, J, K) when K >= Ha ->
     if
 	J =:= La - 1-> 
@@ -137,13 +152,14 @@ from_list(List, Cube, Lo, La, Ha, I, J, K) when K >= Ha ->
 	    end;
 	true -> from_list(List, Cube, Lo, La, Ha, I, J+1, 0)
     end;
-
 from_list([Val| Tail], Cube, Lo, La, Ha, I, J, K) -> 
     io:format("~p~n", [{I, J, K}]),
     New_cube = cube:set(I, J, K, Val, Cube),
     from_list(Tail, New_cube, Lo, La, Ha, I, J, K+1).
 
-    
+  
+%% @doc Update a line from a list
+-spec update_line_from_list(I::number(), J::number, List::list(), Cube::array()) -> no_return(). 
 update_line_from_list(I, J, List, Cube) ->
     La_array = array:get(I, Cube),
     New_la_array = array:set(J, array:from_list(List, La_array), La_array),

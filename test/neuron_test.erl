@@ -14,9 +14,9 @@ test_neuron(Inputs, Values, Output) ->
     end.
 
 xor_test() ->
-    L1 = [{2, [1, 1], -1.5, utils:seuil(0)}],
-    L2 = [{2, [2, 2], -1, utils:seuil(0)},
-	  {2, [-1, -1], 1.5, utils:seuil(0)}],
+    L1 = [{2, [1, 1], -1.5, utils:threshold(0)}],
+    L2 = [{2, [2, 2], -1, utils:threshold(0)},
+	  {2, [-1, -1], 1.5, utils:threshold(0)}],
     C1 = neuron:make_layer_hard(0, [self()], L1),
     C2 = neuron:make_layer_hard(1, C1, L2),
     Input1 = spawn(fun () -> neuron:input(2, 1, C2) end),

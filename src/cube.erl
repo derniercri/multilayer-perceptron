@@ -1,10 +1,25 @@
 %% @author A. d'Azémard
 %% @copyright 2016 <Dernier Cri>
 %% @version 2.0
-%% @doc Define a cube type
+%% @doc Define a cube type (an alias of scoped array)
 
 -module(cube).
--compile(export_all).
+-export(
+   [
+    new/3,
+    new/4, 
+    size/1, 
+    check_index/4,
+    set/5,
+    get/4, 
+    get_as_list/3, 
+    foldl/3,
+    map/2, 
+    from_list/4,
+    from_list/8, 
+    update_line_from_list/4
+   ]
+  ).
 
 %% create à new cube of Lo*La*Ha dimension
 new(Lo, La, Ha) ->
@@ -42,7 +57,7 @@ size(Cube) ->
 		  end
 	  end.
 
-verif_index(I, J, K, Size) ->
+check_index(I, J, K, Size) ->
     {Max_i, Max_j, Max_k} = Size,
     Non_out_of_bound = (I < Max_i) and (J < Max_j) and (K < Max_k),
     Non_neg = (I >= 0) and (J >= 0) and (K >= 0),
@@ -51,9 +66,9 @@ verif_index(I, J, K, Size) ->
 
 %% set entry {I, J, K} to Value in the Cube 
 set(I, J, K, Value, Cube) ->
-    Verif_index = verif_index(I, J, K, cube:size(Cube)),
+    Check = check_index(I, J, K, cube:size(Cube)) ,
     if 
-	Verif_index ->  error(badarg);
+	Check->  error(badarg);
 	true ->
 	    La_array = array:get(I, Cube),
 	    Ha_array = array:get(J, La_array),
@@ -64,9 +79,9 @@ set(I, J, K, Value, Cube) ->
 
 %% get the value of entry {I, J, K}
 get(I, J, K, Cube) ->
-    Verif_index = verif_index(I, J, K, cube:size(Cube)),
+    Check = check_index(I, J, K, cube:size(Cube)),
     if 
-	Verif_index ->  error(badarg);
+	Check ->  error(badarg);
 	true ->
 	    array:get(K, array:get(J, array:get(I, Cube)))
     end.

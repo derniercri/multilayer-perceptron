@@ -1,5 +1,12 @@
 -module(utils).
--compile(export_all).
+-export(
+   [
+    gb_trees_to_sorted_list/1, 
+    seuil/1, 
+    sigmoid/1,
+    shuffle/1
+   ]
+  ).
 
 %% convertie un gb_tree en liste triée
 gb_trees_to_sorted_list(Gb_Trees) ->
@@ -17,4 +24,4 @@ seuil(S) ->
 sigmoid(X) -> 1 / (1 + math:exp(-X)).
 
 shuffle(L) ->
-    [X||{_,X} <- lists:sort([ {random:uniform(), N} || N <- L])].
+    [X||{_,X} <- lists:sort([ {rand:uniform(), N} || N <- L])].

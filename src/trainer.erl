@@ -106,7 +106,7 @@ gen_weight(N) ->
 
 gen_weight(Acc, 0) -> Acc;
 gen_weight(Acc, I) -> 
-    New_Acc = [random:uniform() - 0.5 | Acc],
+    New_Acc = [rand:uniform() - 0.5 | Acc],
     gen_weight(New_Acc, I - 1).
 
 

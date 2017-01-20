@@ -1,11 +1,14 @@
 -module(neuron).
--export([make_network/3,
-	 make_layer_hard/3,
-	 output_progress/1,
-	 output/0,
-	 connect_output/2,
-	 input/3]
-       ).
+-export(
+   [
+    make_network/3,
+    make_layer_hard/3,
+    output_progress/1,
+    output/0,
+    connect_output/2,
+    input/3
+   ]
+  ).
 
 %% --------------------------------------------
 %% Type declaration
@@ -85,14 +88,14 @@ connect_output(Output, Layer) ->
 
 
 
--spec input(Rank :: integer(), Outputs :: [pid()]) -> no_return().
-input(Rank, Outputs) ->
-    receive
-        {input, Value} ->
-            send_msg_to_list(Outputs, {done, Value, {self(), -1, Rank}}),
-            input(Rank, Outputs);
-        _ -> input(Rank, Outputs)
-    end.
+%% -spec input(Rank :: integer(), Outputs :: [pid()]) -> no_return().
+%% input(Rank, Outputs) ->
+%%     receive
+%%         {input, Value} ->
+%%             send_msg_to_list(Outputs, {done, Value, {self(), -1, Rank}}),
+%%             input(Rank, Outputs);
+%%         _ -> input(Rank, Outputs)
+%%     end.
 
 %% @doc fournit à un processus une entrée générique permettant d'envoyer des valeurs à un ou plusieurs neurone. <br/>
 %%      Arguments : 

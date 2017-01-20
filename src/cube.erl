@@ -1,3 +1,8 @@
+%% @author A. d'Azémard
+%% @copyright 2016 <Dernier Cri>
+%% @version 2.0
+%% @doc Define a cube type
+
 -module(cube).
 -compile(export_all).
 

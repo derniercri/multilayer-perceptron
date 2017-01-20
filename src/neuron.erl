@@ -15,30 +15,20 @@
 %% --------------------------------------------
 
 %% @type layer_value() = { N :: integer(), P :: integer(), F :: fun ((float()) -> float())}.
-%%       tuple contenant les paramètres d'une couche <br/>
-%%       Valeurs :  
-%%       <ul><li> N : nombre de neurone sur la couche </li>
-%%       <li> P : nombre d'entrée de la couche </li>
-%%       <li> F : fonction d'activation de la couche </li></ul>
+%%       tuple with layer's parameters <br/>
+%%       Values :  
+%%       <ul><li> N : number of neurons on a layer</li>
+%%       <li> P : number input's layer</li>
+%%       <li> F : activation function of a layer</li></ul>
 
 -type layer_value() :: { N :: integer(), P :: integer(), F :: fun ((float()) -> float())}.
 
 %% @type network_value() = {Network :: matrix:matrix(), Input_list :: [pid()], Output_list :: [pid()], Network_size :: [integer()]}.
-%%      tuple contenant les valeurs permettant d'interagir avec le resaux <br/>
-%%      Valeurs : 
-%%      <ul><li>Network : une matrice contenant un couple {PID, nb_inputs} représentant un neurone</li>
-%%      <li>Input_list : liste des PIDs des entrées du réseaux</li>
-%%      <li>Output_list : liste des PIDs de la couche de sortie du réseaux</li>
-%%      <li>Network_size : liste des tailles de chaque couches</li></ul>
+%%      tuple with value to interact with a layer
 -type network_value() :: {Network :: matrix:matrix(), Input_list :: [pid()], Output_list :: [pid()], Network_size :: [integer()]}.
 
 %% @type neuron_value() = {Nb_inputs :: integer(), Weights :: [float()], B :: float(), F :: fun ((float()) -> float())}.
-%%       tuple contenant les valeurs d'un neurone<br/>
-%%       Valeurs : 
-%%       <ul><li>Nb_inputs : nombre d'entrée connectées au neurone</li>
-%%       <li>Weights : liste des poids à appliquer aux entrées pour le calcul. Cette liste doit être de taille Nb_inputs et les poids doivent être rangés dans l'ordre croissant de leur indice.</li>
-%%       <li>B : le biais du neurone</li>
-%%       <li>F : la fonction d'activation</li></ul>
+%%       tuple with neuron's values
 -type neuron_value() :: {Nb_inputs :: integer(), Weights :: [float()], B :: float(), F :: fun ((float()) -> float())}.
 
 %% --------------------------------------------
@@ -62,14 +52,13 @@ output(N, I) ->
 	    output(N + 1, I)
     end.
 
-%% @doc affiche la sortie d'un neurone.
-%%      Cette fonction doit être lancée par un processus connu par une liste de neurone. À chaque fois qu'un de ces neurones obtient un résultat, il l'enverra au processus qui affichera le résultat.
+%% @doc Output a neuron
 -spec output() -> no_return().
 output() ->
     receive
         {done, Result, {_, Layer, Rank}} -> 
             io:format(
-              "couche : ~p, neurone ~p, resultat : ~p~n", 
+              "Layer : ~p, neuron ~p, result : ~p~n", 
               [Layer, Rank, Result]
              ),
             output();
@@ -77,10 +66,7 @@ output() ->
     end.
 
 
-%% @doc Connecte une sortie à une liste de neurone <br/>
-%%      Arguments : 
-%%      <ul><li>Output : PID de la sortie à connecter à chaque neurones </li>
-%%      <li>Layer : liste des PIDs de tout les neurones à connecter </li></ul>
+%% @doc Connect an output to a neurons list
 -spec connect_output(Output :: pid(), Layer :: [pid()]) -> ok.
 connect_output(Output, Layer) ->
     F = fun(PID) -> PID ! {connect_output, Output} end,

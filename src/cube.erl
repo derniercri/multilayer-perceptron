@@ -21,7 +21,14 @@
    ]
   ).
 
-%% create à new cube of Lo*La*Ha dimension
+-export_type([array/0, size/0]).
+
+-opaque array() :: atom().
+-type size() :: {number(), number(), number()}.
+
+
+%% @doc create à new cube of Lo*La*Ha dimension
+-spec new(Lo::number(), La::number(), Ha::number()) -> array().
 new(Lo, La, Ha) ->
     Cube = array:new(Lo),
     F = fun(_, _) -> array:new(Ha) end,
@@ -31,6 +38,8 @@ new(Lo, La, Ha) ->
 	 end,
     array:map(F2, Cube).
 
+%% @doc create à new cube of Lo*La*Ha dimension with an option list
+-spec new(Lo::number(), La::number(), Ha::number(), Options::list()) -> array().
 new(Lo, La, Ha, Options) ->
     Cube = array:new(Lo),
     F = fun(_, _) -> array:new(Ha, Options) end,
@@ -40,7 +49,8 @@ new(Lo, La, Ha, Options) ->
 	 end,
     array:map(F2, Cube).
 
-%% give the Cube's size in a tuple {Lo, La, Ha}
+%% @doc give the Cube's size in a tuple {Lo, La, Ha}
+-spec size(Cube::array()) -> size().
 size(Cube) ->
     case array:size(Cube) of
 	0 -> {0, 0, 0};
@@ -57,6 +67,8 @@ size(Cube) ->
 		  end
 	  end.
 
+%% @doc Check if an index is valid
+-spec check_index(I::number(), J::number(), K::number(), Size::size()) -> boolean().
 check_index(I, J, K, Size) ->
     {Max_i, Max_j, Max_k} = Size,
     Non_out_of_bound = (I < Max_i) and (J < Max_j) and (K < Max_k),
@@ -64,7 +76,8 @@ check_index(I, J, K, Size) ->
     not (Non_out_of_bound and Non_neg).
 
 
-%% set entry {I, J, K} to Value in the Cube 
+%% @doc Set entry {I, J, K} to Value in the Cube
+-spec set(I::number(), J::number(), K::number(), Value::term(), Cube::array()) -> no_return(). 
 set(I, J, K, Value, Cube) ->
     Check = check_index(I, J, K, cube:size(Cube)) ,
     if 
@@ -77,7 +90,8 @@ set(I, J, K, Value, Cube) ->
 	    array:set(I, New_la_array, Cube)
     end.
 
-%% get the value of entry {I, J, K}
+%% @doc Get the value of entry {I, J, K}
+-spec get(I::number(), J::number(), K::number(), Cube::array()) -> any().
 get(I, J, K, Cube) ->
     Check = check_index(I, J, K, cube:size(Cube)),
     if 
@@ -86,7 +100,8 @@ get(I, J, K, Cube) ->
 	    array:get(K, array:get(J, array:get(I, Cube)))
     end.
 
-%%
+%% @doc Convert Cube's value to list
+-spec get_as_list(I::number(), J::number(), Cube::array()) -> list(term()).
 get_as_list(I, J, Cube) ->    
     array:to_list( array:get(J, array:get(I, Cube))).
 

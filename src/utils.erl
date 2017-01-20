@@ -2,7 +2,7 @@
 -export(
    [
     gb_trees_to_sorted_list/1, 
-    seuil/1, 
+    threshold/1, 
     sigmoid/1,
     shuffle/1
    ]
@@ -16,7 +16,7 @@ gb_trees_to_sorted_list(Gb_Trees) ->
     F2 = fun({_, V}) -> V end,
     lists:map(F2, Sorted_list).
 
-seuil(S) ->
+threshold(S) ->
     fun (X) when X > S -> 1;
         (_) -> -1
     end.

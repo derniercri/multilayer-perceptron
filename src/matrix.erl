@@ -1,12 +1,16 @@
 -module(matrix).
--export([new/2,
-	 new/3,
-	 new_variable/2,
-	 size/1,
-	 set/4,
-	 get/3,
-	 foldl/3,
-	 map/2]).
+-export(
+   [
+    new/2,
+    new/3,
+    new_variable/2,
+    size/1,
+    set/4,
+    get/3,
+    foldl/3,
+    map/2
+   ]
+  ).
 
 %% --------------------------------------------
 %% Type declaration

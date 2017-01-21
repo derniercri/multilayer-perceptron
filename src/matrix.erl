@@ -18,6 +18,8 @@
    ]
   ).
 
+-export_type([matrix/0, matrix/1]).
+
 %% --------------------------------------------
 %% Type declaration
 %% --------------------------------------------
@@ -90,7 +92,7 @@ set(I, J, Value, Matrix) ->
     end.
 
 %% @doc get the value of entry {I, J} from Matrix
--spec get(I::integer(), J::integer(), Matrix::matrix()) -> matrix().
+-spec get(I::integer(), J::integer(), Matrix::matrix()) -> term().
 get(I, J, Matrix) ->
     Verif_index = verif_index(I, J, Matrix),
     if 

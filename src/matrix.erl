@@ -69,7 +69,7 @@ size(Matrix) ->
 
 %% intern function
 %% test if the index I and J are include in Matrix 
-verif_index(I, J, Matrix) ->
+check_index(I, J, Matrix) ->
     case array:size(Matrix) of
 	Max_i when (I >= 0) and (I < Max_i) ->
 	    Line_i = array:get(I, Matrix),
@@ -82,9 +82,9 @@ verif_index(I, J, Matrix) ->
 %% @doc set entry {I, J} to Value in the Matrix 
 -spec set(I::integer(), J::integer(), Value::I, Matrix::matrix()) -> matrix(I).
 set(I, J, Value, Matrix) ->
-    Verif_index = verif_index(I, J, Matrix),
+    Check = check_index(I, J, Matrix),
     if 
-        Verif_index ->  error(badarg);
+        Check ->  error(badarg);
         true ->
             La_array = array:get(I, Matrix),
             New_la_array = array:set(J, Value, La_array),
@@ -94,22 +94,30 @@ set(I, J, Value, Matrix) ->
 %% @doc get the value of entry {I, J} from Matrix
 -spec get(I::integer(), J::integer(), Matrix::matrix()) -> term().
 get(I, J, Matrix) ->
-    Verif_index = verif_index(I, J, Matrix),
+    Check = check_index(I, J, Matrix),
     if 
-        Verif_index ->  error(badarg);
-        true ->
-            array:get(J, array:get(I, Matrix))
+        Check ->  error(badarg);
+        true -> array:get(J, array:get(I, Matrix))
     end.
 
-%% @doc Fold the elements of the array using the given function and initial accumulator value. The elements are visited in order from the lowest index to the highest
+%% @doc Fold the elements of the array using the given function and initial 
+%% accumulator value. The elements are visited in order from the lowest index to the highest
 -spec foldl(F::fun((I::integer(), J::integer(), Val::any(), Acc::Type2) -> New_acc::Type2), Acc_init::Type2, Matrix::matrix()) -> Type2.
 foldl(F, Acc_init, Matrix) ->
     F_curry = fun(I) -> fun(J, Val, Acc) -> F(I, J, Val, Acc) end end,
     F_lo = fun(I, Val, Acc) -> array:foldl(F_curry(I), Acc, Val) end,
     array:foldl(F_lo, Acc_init, Matrix).
 
-%% @doc map the given function onto each element of the matrix. The element are visited in order from the lowest line to the higtest.
--spec map(F::fun((I::integer(), J::integer(), Val::any()) -> New_val::any()), Matrix::matrix()) -> matrix().
+%% @doc map the given function onto each element of the matrix. 
+%% The element are visited in order from the lowest line to the higtest.
+-spec map(
+	F::fun((I::integer(), 
+		J::integer(), 
+		Val::any()
+	       ) -> New_val::any()), 
+	Matrix::matrix()
+       ) -> matrix().
+
 map(F, Matrix) ->
     F_curry = fun(I) -> fun(J, Val) -> F(I, J, Val) end end,
     F_lo = fun(I, Val) -> array:map(F_curry(I), Val) end,

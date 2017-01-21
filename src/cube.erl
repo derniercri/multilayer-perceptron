@@ -21,14 +21,22 @@
    ]
   ).
 
--export_type([array/0, size/0]).
+-export_type([size/0]).
 
--opaque array() :: atom().
--type size() :: {number(), number(), number()}.
+-type size() :: {
+	    non_neg_integer(),
+	    non_neg_integer(), 
+	    non_neg_integer()
+	   }.
 
 
 %% @doc create à new cube of Lo*La*Ha dimension
--spec new(Lo::number(), La::number(), Ha::number()) -> array().
+-spec new(
+	Lo::non_neg_integer(), 
+	La::non_neg_integer(), 
+	Ha::non_neg_integer()
+       ) -> array:array(any()).
+
 new(Lo, La, Ha) ->
     Cube = array:new(Lo),
     F = fun(_, _) -> array:new(Ha) end,
@@ -39,7 +47,13 @@ new(Lo, La, Ha) ->
     array:map(F2, Cube).
 
 %% @doc create à new cube of Lo*La*Ha dimension with an option list
--spec new(Lo::number(), La::number(), Ha::number(), Options::list()) -> array().
+-spec new(
+	Lo::non_neg_integer(), 
+	La::non_neg_integer(), 
+	Ha::non_neg_integer(), 
+	Options::list()
+       ) -> array:array(any()).
+
 new(Lo, La, Ha, Options) ->
     Cube = array:new(Lo),
     F = fun(_, _) -> array:new(Ha, Options) end,
@@ -50,7 +64,8 @@ new(Lo, La, Ha, Options) ->
     array:map(F2, Cube).
 
 %% @doc give the Cube's size in a tuple {Lo, La, Ha}
--spec size(Cube::array()) -> size().
+-spec size(Cube::array:array(any())) -> size().
+
 size(Cube) ->
     case array:size(Cube) of
 	0 -> {0, 0, 0};
@@ -68,7 +83,13 @@ size(Cube) ->
 	  end.
 
 %% @doc Check if an index is valid
--spec check_index(I::number(), J::number(), K::number(), Size::size()) -> boolean().
+-spec check_index(
+	I::non_neg_integer(), 
+	J::non_neg_integer(), 
+	K::non_neg_integer(), 
+	Size::size()
+       ) -> boolean().
+
 check_index(I, J, K, Size) ->
     {Max_i, Max_j, Max_k} = Size,
     Non_out_of_bound = (I < Max_i) and (J < Max_j) and (K < Max_k),
@@ -77,7 +98,14 @@ check_index(I, J, K, Size) ->
 
 
 %% @doc Set entry {I, J, K} to Value in the Cube
--spec set(I::number(), J::number(), K::number(), Value::term(), Cube::array()) -> no_return(). 
+-spec set(
+	I::non_neg_integer(), 
+	J::non_neg_integer(), 
+	K::non_neg_integer(), 
+	Value::term(), 
+	Cube::array:array(any())
+       ) -> no_return().
+ 
 set(I, J, K, Value, Cube) ->
     Check = check_index(I, J, K, cube:size(Cube)) ,
     if 
@@ -91,7 +119,13 @@ set(I, J, K, Value, Cube) ->
     end.
 
 %% @doc Get the value of entry {I, J, K}
--spec get(I::number(), J::number(), K::number(), Cube::array()) -> any().
+-spec get(
+	I::non_neg_integer(), 
+	J::non_neg_integer(), 
+	K::non_neg_integer(), 
+	Cube::array:array(any())
+       ) -> any().
+
 get(I, J, K, Cube) ->
     Check = check_index(I, J, K, cube:size(Cube)),
     if 
@@ -101,16 +135,32 @@ get(I, J, K, Cube) ->
     end.
 
 %% @doc Convert Cube's value to list
--spec get_as_list(I::number(), J::number(), Cube::array()) -> list(term()).
+-spec get_as_list(
+	I::non_neg_integer(), 
+	J::non_neg_integer(), 
+	Cube::array:array(any())
+       ) -> list(term()).
+
 get_as_list(I, J, Cube) ->    
     array:to_list( array:get(J, array:get(I, Cube))).
 
 %% @doc Foldl for a cube
--spec foldl(Function, Acc_init :: A, Array :: array()) -> B when
-      Function :: fun((Index :: number(), Value :: _, Acc :: A) -> B).
+-spec foldl(
+	Function, 
+	Acc_init :: A, 
+	Array :: 
+	  array:array(any())
+       ) -> B when Function :: fun(
+	  (Index :: non_neg_integer(), 
+	   Value :: _, Acc :: A
+	  ) -> B
+							    ).
 foldl(F, Acc_init, Cube) ->
-    F_curry = fun(I, J) -> fun(K, Val, Acc) -> F(I, J, K, Val, Acc) end end,
-    
+    F_curry = 
+	fun(I, J) -> 
+		fun(K, Val, Acc) -> F(I, J, K, Val, Acc) 
+		end 
+	end,
     F_lo = fun(I, Val, Acc) ->
 		   F_la = fun(J, Val2, Acc2) -> array:foldl(F_curry(I, J), Acc2, Val2) end,
 		   array:foldl(F_la, Acc, Val)
@@ -118,8 +168,14 @@ foldl(F, Acc_init, Cube) ->
     array:foldl(F_lo, Acc_init, Cube).
 
 %% @doc Map for a cube
--spec map(Function, Array :: array()) -> array() when
-Function :: fun((Index :: number(), Value :: _) -> _).
+-spec map(
+	Function, 
+	Array :: array:array(any())
+       ) -> array:array(any()) when Function :: fun(
+	  (Index :: non_neg_integer(), 
+	   Value :: _
+	  ) -> _).
+
 map(F, Cube) ->
     F_curry = fun(I, J) -> fun(K, Val) -> F(I, J, K, Val) end end,
     F_lo = fun(I, Val) ->
@@ -129,21 +185,30 @@ map(F, Cube) ->
     array:map(F_lo, Cube).
 
 %% @doc Create a cube from a list
--spec from_list(List::list(), Lo::number(), La::number(), Ha::number()) -> array().
+-spec from_list(
+	List::list(), 
+	Lo::non_neg_integer(), 
+	La::non_neg_integer(), 
+	Ha::non_neg_integer()
+       ) -> array:array(any()).
+
 from_list(List, Lo, La, Ha) ->
     from_list(List, cube:new(Lo,La,Ha), Lo, La, Ha, 0, 0, 0).
 
 %% @doc Create a cube from a list
 -spec from_list(
 	List::list(), 
-	Cube::array(), 
-	Lo::number(), 
-	La::number(), 
-	Ha::number(), 
-	I::number(), 
-	J::number(), 
-	K::number()) -> array().
+	Cube::array:array(any()), 
+	Lo::non_neg_integer(), 
+	La::non_neg_integer(), 
+	Ha::non_neg_integer(), 
+	I::non_neg_integer(), 
+	J::non_neg_integer(), 
+	K::non_neg_integer()
+       ) -> array:array(any()).
+
 from_list([], Cube, _, _, _, _, _, _) -> Cube;
+
 from_list(List, Cube, Lo, La, Ha, I, J, K) when K >= Ha ->
     if
 	J =:= La - 1-> 
@@ -152,6 +217,7 @@ from_list(List, Cube, Lo, La, Ha, I, J, K) when K >= Ha ->
 	    end;
 	true -> from_list(List, Cube, Lo, La, Ha, I, J+1, 0)
     end;
+
 from_list([Val| Tail], Cube, Lo, La, Ha, I, J, K) -> 
     io:format("~p~n", [{I, J, K}]),
     New_cube = cube:set(I, J, K, Val, Cube),
@@ -159,7 +225,13 @@ from_list([Val| Tail], Cube, Lo, La, Ha, I, J, K) ->
 
   
 %% @doc Update a line from a list
--spec update_line_from_list(I::number(), J::number, List::list(), Cube::array()) -> no_return(). 
+-spec update_line_from_list(
+	I::non_neg_integer(), 
+	J::non_neg_integer(), 
+	List::[any()], 
+	Cube::array:array(any())
+       ) -> no_return(). 
+
 update_line_from_list(I, J, List, Cube) ->
     La_array = array:get(I, Cube),
     New_la_array = array:set(J, array:from_list(List, La_array), La_array),

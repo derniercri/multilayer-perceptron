@@ -112,3 +112,29 @@ Trainer = trainer:init(Network, Network_size, Input_list).
 `Trainer` is the PID of the supervisor.
 
 ### launch a training
+To start the training, several values have to be initialized. Train values and train constants. 
+(See the `training_value` and `training_constant` documentation)
+
+In our example, we want to recreate a `xor`. We will initialize our supervisor with a 
+margin of error of 0, a speed of 1 and a maximum of iteration of 10000.
+
+To start the training, we will use the `trainer:launch/4`.
+
+```erlang
+Threshold = 0,
+Primus_F = F,
+Speed = 1,
+Max_iter = 10000,
+
+%% Training values
+Training_list = [ {[1,0], [1]}, {[0,1], [1]}, {[0,0], [0]}, {[1,1], [0]}],
+
+%% Start the training
+trainer:launch(Trainer, Input_list, Training_list, {Threshold, Primus_F, Speed, Max_iter}).
+```
+
+Now that our network is trained, we can use the `connect_output` function to collect the results with the main process:
+
+```erlang
+neuron:connect_output(self(), Output_list)
+```

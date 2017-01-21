@@ -63,23 +63,7 @@ In the case of a training, a network could be initialized with empty values, usi
 -  `Nb_inputs` : the number of inputs of the network ;
 -  `Nb_layer ` : the number of layers of the network.
 
------------
-
-
-## Créer un réseau vide en vue d'un entraînement
-
-Dans le cas d'un entraînement, le réseau peut être initialiser avec des valeurs vide grâce à la fonction `neuron:make_network/3`  
-Cette fonction demande trois arguments :
-
-- Layers_values : liste des paramètres de chaque couche (voir le type neuron:layer_value() pour une description plus détaillée). Les paramètres doivent être rangés dans l'ordre croissant, (la couche de sortie ayant l'indice 0 doit donc être placée en tête de la liste)
-
-- Nb_inputs : Le nombre d'entrée du réseau.
-
-- Nb_layer : le nombre de couche sur le réseau.
-
-### Exemple d'utilisation
-
-Nous allons créer la même structure que précédemment mais sans ses valeurs
+### A xor without values 
 
 ```erlang
 F = fun (X) -> utils:sigmoid(X) end,
@@ -88,10 +72,14 @@ L = [{1, 2, F},
 {Network, Input_list, Output_list, Network_size} = neuron:make_network(L, 2, 2).
 ```
 
-Les valeurs renvoyées par `make_network` nous seront utiles pour communiquer avec le réseau et l'entraîner.
+The values returned by `make_network` will help us communicate with the network and train it.
 
-La valeurs Output_list contient les PIDs des neurones de la couche de sortie. cette liste doit être passée en argument de la fonction `neuron:connect_output/2` pour être connecté à une sortie.  
-Attention, ne connectez vos sorties qu'une fois que le réseau à terminé son entraînement, sinon votre processus de sortie sera submergé de message.
+The `Output_list` values contain the PIDs of the neurons in the output layer. This list must be passed as an argument to the neuron: `connect_output/2` function to be connected to an output.
+Be careful, only connect your outputs once the network has completed its workout, otherwise your output process will be overwhelmed with message.
+
+## Network interaction
+
+-----------
 
 ## Interagir avec le resaux
 

@@ -28,6 +28,32 @@ The function `neuron:make_layer_hard/3` create a layer.
 -  `Pid list` : the list of the PID's to be relied to the neuron ;
 -  `Neurons list`: a list of ordered neurons.
 
+### Neuron representation
+
+A neuron is a tuple with 4 fields : 
+
+-  `Nb_inputs` : The number of inputs connected to the neuron. This is the neuron number of the previous layer or the number of network input if the neuron is part of the input layer ;
+-  `Weights ` : the list of weights applied to each input of the neuron (there must be as many as input). These weights must be sorted in the same order as the entries. Thus the weight applied to the inlet 1 must be in the first position ; 
+-  `B` : The threshold of the neuron ; 
+-  `F` : Activation function of the neuron.
+
+### Example
+Initialization of a network performing a `xor`.
+The activation function is the threshold function of the 
+[utils module](http://derniercri.github.io/multilayer_perceptron_library/index.html). 
+The current process is used as the output for the network.
+
+![Example](https://github.com/derniercri/multilayer_perceptron_library/blob/master/img/schema2.png?raw=true)
+```erlang
+%% Neuron's creation
+N1 = {2, [2, 2], -1, utils:threshold(0)},
+N2 = {2, [-1, -1], 1.5, utils:threshold(0)},
+N3 = {2, [1, 1], -1.5, utils:threshold(0)},  
+%% Layer's creation
+C1 = neuron:make_layer_hard(0, [self()],[N3),
+C2 = neuron:make_layer_hard(1, C1, [N1, N2]).
+```
+
 -----------
 
 

@@ -2,9 +2,9 @@
 
 # Multilayer_perceptron_library
 
-> This library is a small **experimentation** about neural network and actor model. 
-> The module is not used in production.  
-> The library provides functions for create and train multi-layer perceptron.
+> This library is a small **experimentation** about neural network and actor model.
+> The module is not used in production.
+> The library provides functions to create and train multi-layer perceptron.
 
 ## Installation 
 
@@ -20,7 +20,7 @@ This project use rebar3, so :
 
 [Link to the documentation](http://derniercri.github.io/multilayer_perceptron_library/index.html)
 
-Here is how to create a neural network by initializing all the values of each neuron. This is useless if the network is to be trained because the values will be generated randomly.
+Here is how to create a neural network by initializing all the values in each neuron. This is useless if the network is to be trained because the values will be generated randomly.
 
 The function `neuron:make_layer_hard/3` create a layer.
 
@@ -48,7 +48,7 @@ The current process is used as the output for the network.
 %% Neuron's creation
 N1 = {2, [2, 2], -1, utils:threshold(0)},
 N2 = {2, [-1, -1], 1.5, utils:threshold(0)},
-N3 = {2, [1, 1], -1.5, utils:threshold(0)},  
+N3 = {2, [1, 1], -1.5, utils:threshold(0)},
 %% Layer's creation
 C1 = neuron:make_layer_hard(0, [self()],[N3),
 C2 = neuron:make_layer_hard(1, C1, [N1, N2]).
@@ -56,14 +56,14 @@ C2 = neuron:make_layer_hard(1, C1, [N1, N2]).
 
 ## Create an empty network to be trained
 
-In the case of a training, a network could be initialized with empty values, using 
-[`neuron:make_network/3`](http://derniercri.github.io/multilayer_perceptron_library/neuron.html#make_network-3) : 
+In the case of a training, a network could be initialized with empty values, using
+[`neuron:make_network/3`](http://derniercri.github.io/multilayer_perceptron_library/neuron.html#make_network-3) :
 
 -  `Layer_values` : list of parameters for each layer (see [layer_value](http://derniercri.github.io/multilayer_perceptron_library/neuron.html#types)) for a more detailed description). The parameters must be arranged in ascending order (the output layer with the index 0 must therefore be placed at the top of the list) ;
 -  `Nb_inputs` : the number of inputs of the network ;
 -  `Nb_layer ` : the number of layers of the network.
 
-### A xor without values 
+### A xor without values
 
 ```erlang
 F = fun (X) -> utils:sigmoid(X) end,
@@ -112,7 +112,7 @@ Trainer = trainer:init(Network, Network_size, Input_list).
 `Trainer` is the PID of the supervisor.
 
 ### launch a training
-To start the training, several values have to be initialized. Train values and train constants. 
+To start the training, several values have to be initialized. Training values and training constants. 
 (See the `training_value` and `training_constant` documentation)
 
 In our example, we want to recreate a `xor`. We will initialize our supervisor with a 

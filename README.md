@@ -40,7 +40,7 @@ A neuron is a tuple with 4 fields :
 ### Example
 Initialization of a network performing a `xor`.
 The activation function is the threshold function of the 
-[utils module](http://derniercri.github.io/multilayer_perceptron_library/index.html). 
+[utils module](http://derniercri.github.io/multilayer_perceptron_library/utils.html#threshold-1). 
 The current process is used as the output for the network.
 
 ![Example](https://github.com/derniercri/multilayer_perceptron_library/blob/master/img/schema2.png?raw=true)
@@ -54,58 +54,17 @@ C1 = neuron:make_layer_hard(0, [self()],[N3),
 C2 = neuron:make_layer_hard(1, C1, [N1, N2]).
 ```
 
+## Create an empty network to be trained
+
+In the case of a training, a network could be initialized with empty values, using 
+[`neuron:make_network/3`](http://derniercri.github.io/multilayer_perceptron_library/neuron.html#make_network-3) : 
+
+-  `Layer_values` : list of parameters for each layer (see [layer_value](http://derniercri.github.io/multilayer_perceptron_library/neuron.html#types)) for a more detailed description). The parameters must be arranged in ascending order (the output layer with the index 0 must therefore be placed at the top of the list) ;
+-  `Nb_inputs` : the number of inputs of the network ;
+-  `Nb_layer ` : the number of layers of the network.
+
 -----------
 
-
-Fournis des fonction pour créer et entraîner un perceptron multi-couche concurrent
-
-
-# installation et documentation
-
-* générer la documentation : make doc
-
-# Creer un resaux de neurone avec le module neuron
-
-## Creer et initialiser un réseau
-
-Voici comment créer un réseau de neurone en initialisant toute les valeurs de chaque neurone. Cela est inutile si le réseau doit être entraîné car les valeurs seront générées aléatoirement.
-
-Nous allons utiliser la fonction `neuron:make_layer_hard/3` pour créer chaque couche indépendamment.  
-Cette fonction prend en argument :
-
-- le rang de la couche (la couche d'entrée devant avoir l'indice le plus haut et la couche de sortie l'indice 0)
-
-- La liste des PIDs des sorties à relier au neurone
-
-- la liste des valeurs de chaque neurone (tuple décris plus bas). Les valeurs des neurones doivent y être rangées dans l'ordre croissant. Ainsi, la valeur du neurone 1 doit être entête de la liste.
-
-### Valeurs de neurone
-
-Les neurones sont représentés par un tuple contenant les valeurs nécessaires au calcul de son résultat. Il possède 4 champ :
-
-- Nb_inputs : le nombre d'entrée connectées au neurone. C'est le nombre de neurone de la couche précédente ou le nombre d'entrée du réseau si le neurone fait partie de la couche d'entrée.
-
-- Weights : la liste des poids appliqués à chaque entrée du neurone (il doit y en avoir autant que d'entrée). Ces poids doivent être triés dans le même ordre que les entrées. Ainsi le poids appliqué à l'entrée 1 doit être en première position.
-
-- B : le biais du neurone
-
-- F : fonction d'activation du neurone
-
-### Exemple d'utilisation
-
-Initialisation d'un réseau réalisant un xor.  
-La fonction d'activation est la fonction seuil du module utils  
-Le processus courant est utilisé comme sortie pour le réseau.  
-![Example](https://github.com/derniercri/multilayer_perceptron_library/blob/master/img/schema2.png?raw=true)
-```erlang
-%% Création des neurones
-N1 = {2, [2, 2], -1, utils:seuil(0)},
-N2 = {2, [-1, -1], 1.5, utils:seuil(0)},
-N3 = {2, [1, 1], -1.5, utils:seuil(0)},  
-%% Création des couches
-C1 = neuron:make_layer_hard(0, [self()],[N3),
-C2 = neuron:make_layer_hard(1, C1, [N1, N2]).
-```
 
 ## Créer un réseau vide en vue d'un entraînement
 

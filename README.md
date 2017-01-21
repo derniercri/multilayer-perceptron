@@ -79,76 +79,16 @@ Be careful, only connect your outputs once the network has completed its workout
 
 ## Network interaction
 
------------
+To send information to the network, it is necessary to use an external process connected to the input layer of the network and to send it the information to be transmitted. The information will then be transmitted to all the neurons of the input layer.
 
-## Interagir avec le resaux
+If the network was created using the `make_network function`, the list of PIDs of the processes used as input is returned in the value `Input_list` (see above)
 
-### utiliser les entrées
-
-Pour envoyer des informations au réseau, il faut utiliser un processus externe ,relié à la couche d'entrée du réseau et lui envoyer les information à transmettre. l'information seras alors transmises à tout les neurones de la couche d'entrée.
-
-Si le réseau à été créé grâce à la fonction `make_network`, la liste des PIDs des processus utilisés comme entrée est renvoyé dans la valeur `Input_list` (voir plus haut)
-
-Si le réseau à été initialisé manuellement, il faut créer manuellement les entrées.  
-Il suffit de créer un processus et de lui faire utiliser la fonction `neuron:input/3`.
-
-#### Exemple
-Nous créons ici 2 entrée que nous raccordons au réseau créé manuellement
+If the network has been initialized manually, you must manually create the entries.
+Simply create a process and make it use the neuron function: `input/3`.
 
 ```erlang
 Input1 = spawn(fun () -> neuron:input(2, 1, C2) end),
 Input2 = spawn(fun () -> neuron:input(2, 2, C2) end).
 ```
-#### Envoyer une valeur à une entrée
-Pour envoyer une valeur à une entrée il suffit d'envoyer le message `{input, Valeur}` au processus créé. Par exemple pour envoyer la valeur 1 à l'entrée Input1 créée précédemment : `Input1 ! {input, 1}`
 
-### récupérer les valeurs de sortie du réseau.
-Une fois ces calculs terminés, le réseau enverras ces résultats aux processus spécifiés. (ces processus sont spécifié à la création si vous avez créé le neurone manuellement ou grâce à la fonction `neuron:connect_output/2` si vous avez initialisé un réseau vide). Le message envoyé est : `{done, Result, {PID, Layer, Rank}}` avec :
-
-- Result : le résultat du calcul
-
-- PID : le PID du neurone ayant envoyé le résultat
-
-- Layer : le rang de la couche ayant envoyée le résultat
-
-- Rank :  le rang du neurone ayant envoyé le résultat
-
-# Entraîner un réseau
-
-Pour cette étape nous partirons du principe que nous possédons le réseau initialisé précédemment.
-
-## Créer et initialiser le superviseur
-
-Pour créer le superviseur on va réutiliser les valeurs renvoyées par la fonction `neuron:make_network` :
-
-```erlang
-Trainer = trainer:init(Network, Network_size, Input_list).
-```
-
-Cette fonction renvoie le PID du superviseur.
-
-## Lancer l'entraînement
-
-Pour lancer l'entraînement, il faut tout d'abord initialiser plusieurs valeurs. Les valeurs d'entraînements et les constantes d'entraînement. (voir la documentation des type `training_value` et `training_constant` du module `trainer`)
-
-Dans notre exemple, nous voulons recréer un xor. Nous allons initialiser notre superviseur avec une marge d'erreur de 0, une vitesse de 1 et un maximum d'itération de 10000.
-
-Pour lancer l'entraînement, nous utiliserons la fonction `trainer:launch/4`
-
-```erlang
-%% constante d'entraînement
-Threshold = 0,
-Primus_F = F,
-Speed = 1,
-Max_iter = 10000,
-%% Valeur d'entraînement
-Training_list = [ {[1,0], [1]}, {[0,1], [1]}, {[0,0], [0]}, {[1,1], [0]}],
-%% Lancement de l'entraînement
-trainer:launch(Trainer, Input_list, Training_list, {Threshold, Primus_F, Speed, Max_iter}).
-```
-
-Maintenant que notre réseau est entraîné, nous pouvons utiliser la fonction connect_output pour recueillir les résultat avec le processus principal :
-
-```erlang
-neuron:connect_output(self(), Output_list)
-```
+To send a value to an entry it is enough to send the message `{input, Value}` to the process created. For example, to send the value 1 to the input Input1 created previously: `Input1 ! {Input, 1}`.

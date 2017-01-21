@@ -20,6 +20,13 @@ This project use rebar3, so :
 
 [Link to the documentation](http://derniercri.github.io/multilayer_perceptron_library/index.html)
 
+Here is how to create a neural network by initializing all the values of each neuron. This is useless if the network is to be trained because the values will be generated randomly.
+
+The function `neuron:make_layer_hard/3` create a layer.
+
+-  `Rank` : the ID of a layer (`0` is `output`, `> 0` are `inputs`) ; 
+-  `Pid list` : the list of the PID's to be relied to the neuron ;
+-  `Neurons list`: a list of ordered neurons.
 
 -----------
 

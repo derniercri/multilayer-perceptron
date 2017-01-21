@@ -1,6 +1,29 @@
-
+> This readme is work in progress
 
 # Multilayer_perceptron_library
+
+> This library is a small **experimentation** about neural network and actor model. 
+> The module is not used in production.  
+> The library provides functions for create and train multi-layer perceptron.
+
+## Installation 
+
+This project use rebar3, so : 
+
+-  `rebar3 compile` compile the project ; 
+-  `rebar3 eunit` run the tests ;
+-  `rebar3 edoc` generate the documentation in `doc/` ;
+-  `rebar3 dialyzer` type check the library ; 
+-  `rebar3 shell` run an Erlang shell with the library loaded.
+
+## Neuron module
+
+[Link to the documentation](http://derniercri.github.io/multilayer_perceptron_library/index.html)
+
+
+-----------
+
+
 Fournis des fonction pour créer et entraîner un perceptron multi-couche concurrent
 
 

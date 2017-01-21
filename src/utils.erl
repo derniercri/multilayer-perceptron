@@ -14,6 +14,7 @@
   ).
 
 %% @doc Convert gb_tree into ordered list
+-spec gb_trees_to_sorted_list(Gb_Trees::gb_trees:tree(_)) -> [any()].
 gb_trees_to_sorted_list(Gb_Trees) ->
     List = gb_trees:to_list(Gb_Trees),
     F = fun({R1, _}, {R2, _}) ->  R1 =< R2 end,
@@ -22,7 +23,7 @@ gb_trees_to_sorted_list(Gb_Trees) ->
     lists:map(F2, Sorted_list).
 
 %% @doc Define the threshold for a neuron
--spec threshold(number()) -> number().
+-spec threshold(any()) -> fun((any) -> -1 | 1).
 threshold(S) ->
     fun (X) when X > S -> 1;
         (_) -> -1

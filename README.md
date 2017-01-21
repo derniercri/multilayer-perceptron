@@ -92,3 +92,23 @@ Input2 = spawn(fun () -> neuron:input(2, 2, C2) end).
 ```
 
 To send a value to an entry it is enough to send the message `{input, Value}` to the process created. For example, to send the value 1 to the input Input1 created previously: `Input1 ! {Input, 1}`.
+
+### Retrieve the output values of the network
+
+Once these computation are complete, the network will send these results to the specified processes. (These processes are specified at creation if you created the neuron manually or by using the `neuron:connect_output/2` function if you have initialized an empty network). The sent message is: `{done, Result, {PID, Layer, Rank}}` with:
+
+- `Result` : the result of the computation ; 
+- `PID` : the PID of the neuron who's send the result ; 
+- `Layer` : The rank of the layer who's send the result ; 
+- `Rank` : the rank of the sender.
+
+## Neuron training
+
+To create the supervisor we will reuse the values returned by the function: `neuron:make_network`.
+```erlang
+Trainer = trainer:init(Network, Network_size, Input_list).
+```
+
+`Trainer` is the PID of the supervisor.
+
+### launch a training

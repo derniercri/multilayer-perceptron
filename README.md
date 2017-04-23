@@ -1,12 +1,11 @@
-![Thanks a lot to [fh-d](https://github.com/fh-d) for this awesome logo !](img/logo.png)
-Thanks a lot to [fh-d](https://github.com/fh-d) for this awesome logo !
-
-
 # Multilayer_perceptron_library
 
 > This library is a small **experimentation** about neural network and actor model.
 > The module is not used in production.
 > The library provides functions to create and train multi-layer perceptron.
+
+![Thanks a lot to [fh-d](https://github.com/fh-d) for this awesome logo !](img/logo.png)
+Thanks a lot to [fh-d](https://github.com/fh-d) for this awesome logo !
 
 ## Installation 
 

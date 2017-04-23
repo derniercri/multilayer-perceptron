@@ -1,4 +1,5 @@
 ![Thanks a lot to [fh-d](https://github.com/fh-d) for this awesome logo !](img/logo.png)
+Thanks a lot to [fh-d](https://github.com/fh-d) for this awesome logo !
 
 
 # Multilayer_perceptron_library
